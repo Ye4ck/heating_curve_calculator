@@ -1,0 +1,67 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Heating Curve",
+        "description": "Set up the heating curve calculation.",
+        "data": {
+          "name": "Name",
+          "outdoor_sensor": "Outdoor Temperature Sensor",
+          "room_sensor": "Room Temperature Sensor (optional)",
+          "curve_slope": "Heating Curve Slope",
+          "curve_level": "Heating Curve Level (Parallel Shift)",
+          "room_temp_target": "Room Target Temperature",
+          "min_flow_temp": "Minimum Flow Temperature",
+          "max_flow_temp": "Maximum Flow Temperature",
+          "calculation_mode": "Calculation Mode"
+        },
+        "data_description": {
+          "room_sensor": "Optional: Sensor for room temperature feedback"
+        }
+      }
+    },
+    "error": {
+      "sensor_not_found": "The selected sensor was not found.",
+      "sensor_required": "Please select an outdoor temperature sensor."
+    },
+    "abort": {
+      "already_configured": "This integration is already configured with this sensor."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Adjust Heating Curve Parameters",
+        "description": "Adjust the heating curve parameters.",
+        "data": {
+          "room_sensor": "Room Temperature Sensor (optional)",
+          "curve_slope": "Heating Curve Slope",
+          "curve_level": "Heating Curve Level (Parallel Shift)",
+          "room_temp_target": "Room Target Temperature",
+          "min_flow_temp": "Minimum Flow Temperature",
+          "max_flow_temp": "Maximum Flow Temperature",
+          "calculation_mode": "Calculation Mode"
+        }
+      }
+    }
+  },
+  "selector": {
+    "calculation_mode": {
+      "options": {
+        "classic": "Classic (without room temperature)",
+        "with_room_temp": "With room temperature feedback"
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "calculation_mode": {
+        "name": "Calculation Mode",
+        "state": {
+          "classic": "Classic",
+          "with_room_temp": "With Room Temperature"
+        }
+      }
+    }
+  }
+}

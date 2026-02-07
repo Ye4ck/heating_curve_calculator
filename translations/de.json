@@ -1,0 +1,67 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Heizkurve konfigurieren",
+        "description": "Richten Sie die Heizkurvenberechnung ein.",
+        "data": {
+          "name": "Name",
+          "outdoor_sensor": "Außentemperatur Sensor",
+          "room_sensor": "Raumtemperatur Sensor (optional)",
+          "curve_slope": "Heizkurven-Steilheit",
+          "curve_level": "Heizkurven-Niveau (Parallelverschiebung)",
+          "room_temp_target": "Raum-Solltemperatur",
+          "min_flow_temp": "Minimale Vorlauftemperatur",
+          "max_flow_temp": "Maximale Vorlauftemperatur",
+          "calculation_mode": "Berechnungsmodus"
+        },
+        "data_description": {
+          "room_sensor": "Optional: Sensor für Raumtemperatur-Rückkopplung"
+        }
+      }
+    },
+    "error": {
+      "sensor_not_found": "Der ausgewählte Sensor wurde nicht gefunden.",
+      "sensor_required": "Bitte wählen Sie einen Außentemperatur-Sensor aus."
+    },
+    "abort": {
+      "already_configured": "Diese Integration wurde bereits mit diesem Sensor konfiguriert."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Heizkurven-Parameter anpassen",
+        "description": "Passen Sie die Parameter der Heizkurve an.",
+        "data": {
+          "room_sensor": "Raumtemperatur Sensor (optional)",
+          "curve_slope": "Heizkurven-Steilheit",
+          "curve_level": "Heizkurven-Niveau (Parallelverschiebung)",
+          "room_temp_target": "Raum-Solltemperatur",
+          "min_flow_temp": "Minimale Vorlauftemperatur",
+          "max_flow_temp": "Maximale Vorlauftemperatur",
+          "calculation_mode": "Berechnungsmodus"
+        }
+      }
+    }
+  },
+  "selector": {
+    "calculation_mode": {
+      "options": {
+        "classic": "Klassisch (ohne Raumtemperatur)",
+        "with_room_temp": "Mit Raumtemperatur-Rückkopplung"
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "calculation_mode": {
+        "name": "Berechnungsmodus",
+        "state": {
+          "classic": "Klassisch",
+          "with_room_temp": "Mit Raumtemperatur"
+        }
+      }
+    }
+  }
+}

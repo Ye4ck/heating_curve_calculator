@@ -1,0 +1,60 @@
+{
+  "title": "Heating Curve Calculator",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Heating Curve",
+        "description": "Set up the heating curve calculation.",
+        "data": {
+          "name": "Name",
+          "outdoor_sensor": "Outdoor Temperature Sensor",
+          "room_sensor": "Room Temperature Sensor",
+          "curve_slope": "Heating Curve Slope",
+          "curve_level": "Heating Curve Level",
+          "room_temp_target": "Room Target Temperature",
+          "min_flow_temp": "Minimum Flow Temperature",
+          "max_flow_temp": "Maximum Flow Temperature",
+          "calculation_mode": "Calculation Mode"
+        }
+      }
+    },
+    "error": {
+      "sensor_not_found": "Sensor not found",
+      "sensor_required": "Outdoor sensor is required"
+    },
+    "abort": {
+      "already_configured": "Integration already configured for this sensor"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Adjust Parameters",
+        "data": {
+          "room_sensor": "Room Temperature Sensor",
+          "curve_slope": "Heating Curve Slope",
+          "curve_level": "Heating Curve Level",
+          "room_temp_target": "Room Target Temperature",
+          "min_flow_temp": "Minimum Flow Temperature",
+          "max_flow_temp": "Maximum Flow Temperature",
+          "calculation_mode": "Calculation Mode"
+        }
+      }
+    }
+  },
+  "selector": {
+    "calculation_mode": {
+      "options": {
+        "classic": "Classic",
+        "with_room_temp": "With Room Temperature"
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "calculation_mode": {
+        "name": "Calculation Mode"
+      }
+    }
+  }
+}
