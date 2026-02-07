@@ -1,4 +1,47 @@
-# Heating Curve Calculator für Home Assistant
+# Heating Curve Calculator for Home Assistant
+
+## Setup
+
+1. Go to **Settings** → **Devices & Services**
+2. Click on **+ Add Integration**
+3. Search for **"Heating Curve Calculator"**
+4. Follow the configuration wizard:
+   - **Name**: Give your heating curve a name (e.g., "Living Room Heating")
+   - **Outdoor Temperature Sensor**: Choose your outdoor temperature sensor
+   - **Room Temperature Sensor** (optional): Only for the "With Room Temperature" mode
+   - **Calculation Mode**: Choose between classic or with room temperature
+   - **Heating Curve Slope**: Typically 0.4 - 2.0 (Default: 1.4)
+   - **Heating Curve Level**: Parallel shift from -20 to +20°C (Default: 0)
+   - **Room Desired Temperature**: Desired room temperature (Default: 20°C)
+   - **Min/Max Flow Temperature**: Safety boundaries for the calculation
+
+## Parameter Explanation
+
+### Heating Curve Slope
+- **Low Value (0.4-0.8)**: Flat curve, less change in flow temperature with outdoor temperature fluctuations
+  - Good for well-insulated buildings or underfloor heating
+- **Medium Value (1.0-1.5)**: Standard for typical radiators
+- **High Value (1.6-2.5)**: Steep curve, strong response to outdoor temperature
+  - For poorly insulated buildings or rapid heating
+
+### Heating Curve Level (Parallel Shift)
+- **Positive Value (+5°C)**: Shifts the entire curve upwards → higher flow temperatures
+- **Negative Value (-5°C)**: Shifts the entire curve downwards → lower flow temperatures
+- Useful for fine-tuning without changing the slope
+
+### Example Calculations
+
+With default settings (Slope: 1.4, Level: 0, Desired Temperature: 20°C):
+
+| Outdoor Temperature | Calculation | Flow Temperature |
+|---------------------|-------------|------------------|
+| -10°C | 20 + 1.4 × (20 - (-10)) + 0 | **62°C** |
+| 0°C   | 20 + 1.4 × (20 - 0) + 0     | **48°C** |
+| 10°C  | 20 + 1.4 × (20 - 10) + 0    | **34°C** |
+| 15°C  | 20 + 1.4 × (20 - 15) + 0    | **27°C** |
+
+
+
 
 ## Einrichtung
 
