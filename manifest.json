@@ -3,10 +3,11 @@
   "name": "Heating Curve Calculator",
   "codeowners": ["@Yeack"],
   "config_flow": true,
-  "documentation": "https://github.com/Ye4ck/heating_curve",
+  "documentation": "https://github.com/Ye4ck/heating_curve_calculator",
   "integration_type": "device",
   "iot_class": "calculated",
   "requirements": [],
   "version": "1.0.0"
 }
+
 
