@@ -1,0 +1,8 @@
+{
+  "name": "Heating Curve Calculator",
+  "content_in_root": false,
+  "filename": "heating_curve_calculator",
+  "render_readme": true,
+  "homeassistant": "2024.1.0",
+  "iot_class": "Calculated"
+}
