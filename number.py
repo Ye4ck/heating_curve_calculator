@@ -16,6 +16,7 @@ from .const import (
     CONF_ROOM_TEMP_TARGET,
     CONF_MIN_FLOW_TEMP,
     CONF_MAX_FLOW_TEMP,
+    CONF_HYSTERESIS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -82,6 +83,17 @@ async def async_setup_entry(
             40.0,
             90.0,
             1.0,
+            UnitOfTemperature.CELSIUS,
+        ),
+        HeatingCurveNumber(
+            hass,
+            config_entry,
+            "hysteresis",
+            "Hysterese",
+            "mdi:swap-horizontal",
+            0.0,
+            5.0,
+            0.1,
             UnitOfTemperature.CELSIUS,
         ),
     ]
@@ -162,4 +174,5 @@ class HeatingCurveNumber(NumberEntity):
         # Get current value from state
         entry_data = self.hass.data[DOMAIN][self._config_entry.entry_id]
         self._attr_native_value = entry_data["state"].get(self._key, self._attr_native_min_value)
+
 
