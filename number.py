@@ -162,3 +162,4 @@ class HeatingCurveNumber(NumberEntity):
         # Get current value from state
         entry_data = self.hass.data[DOMAIN][self._config_entry.entry_id]
         self._attr_native_value = entry_data["state"].get(self._key, self._attr_native_min_value)
+
