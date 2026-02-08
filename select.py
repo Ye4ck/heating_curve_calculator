@@ -100,3 +100,4 @@ class HeatingCurveSelect(SelectEntity):
     def translation_key(self) -> str:
         """Return the translation key."""
         return "calculation_mode"
+
