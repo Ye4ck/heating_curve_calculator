@@ -1,7 +1,7 @@
 {
   "domain": "heating_curve",
   "name": "Heating Curve Calculator",
-  "codeowners": ["@Yeack"],
+  "codeowners": ["@Ye4ck"],
   "config_flow": true,
   "documentation": "https://github.com/Ye4ck/heating_curve_calculator",
   "integration_type": "device",
