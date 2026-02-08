@@ -42,6 +42,11 @@
     }
   },
   "entity": {
+    "number": {
+      "hysteresis": {
+        "name": "Hysteresis"
+      }
+    },
     "select": {
       "calculation_mode": {
         "name": "Calculation Mode",
