@@ -10,7 +10,8 @@
    - **Outdoor Temperature Sensor**: Choose your outdoor temperature sensor
    - **Room Temperature Sensor** (optional): Only for the "With Room Temperature" mode
    - **Calculation Mode**: Choose between classic or with room temperature
-   - **Heating Curve Slope**: Typically 0.4 - 2.0 (Default: 1.4)
+5. Options:
+    - **Heating Curve Slope**: Typically 0.4 - 2.0 (Default: 1.4)
    - **Heating Curve Level**: Parallel shift from -20 to +20°C (Default: 0)
    - **Room Desired Temperature**: Desired room temperature (Default: 20°C)
    - **Min/Max Flow Temperature**: Safety boundaries for the calculation
@@ -53,6 +54,7 @@ With default settings (Slope: 1.4, Level: 0, Desired Temperature: 20°C):
    - **Außentemperatur Sensor**: Wähle deinen Außentemperatur-Sensor
    - **Raumtemperatur Sensor** (optional): Nur für Modus "Mit Raumtemperatur"
    - **Berechnungsmodus**: Wähle zwischen klassisch oder mit Raumtemperatur
+5. Optionen:
    - **Heizkurven-Steilheit**: Typisch 0.4 - 2.0 (Standard: 1.4)
    - **Heizkurven-Niveau**: Parallelverschiebung -20 bis +20°C (Standard: 0)
    - **Raum-Solltemperatur**: Gewünschte Raumtemperatur (Standard: 20°C)
