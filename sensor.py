@@ -68,6 +68,7 @@ class HeatingCurveSensor(SensorEntity):
         self._attr_native_value = None
         self._outdoor_temp = None
         self._room_temp = None
+        self._last_output = None  # For hysteresis
         
         # Generate unique_id
         self._attr_unique_id = f"{config_entry.entry_id}_flow_temperature"
@@ -221,9 +222,10 @@ class HeatingCurveSensor(SensorEntity):
         min_flow = state.get("min_flow_temp", 20.0)
         max_flow = state.get("max_flow_temp", 75.0)
         calculation_mode = state.get("calculation_mode", MODE_CLASSIC)
+        hysteresis = state.get("hysteresis", 1.0)
 
         if self._outdoor_temp is not None:
-            self._attr_native_value = self.calculate_flow_temperature(
+            new_value = self.calculate_flow_temperature(
                 outdoor_temp=self._outdoor_temp,
                 room_temp=self._room_temp,
                 curve_slope=curve_slope,
@@ -233,8 +235,22 @@ class HeatingCurveSensor(SensorEntity):
                 max_flow=max_flow,
                 calculation_mode=calculation_mode,
             )
+            
+            # Apply hysteresis
+            if self._last_output is None:
+                # First run, set directly
+                self._attr_native_value = new_value
+                self._last_output = new_value
+            else:
+                # Check if change is larger than hysteresis
+                change = abs(new_value - self._last_output)
+                if change >= hysteresis:
+                    self._attr_native_value = new_value
+                    self._last_output = new_value
+                # else: keep old value (within hysteresis band)
         else:
             self._attr_native_value = None
+            self._last_output = None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -250,6 +266,7 @@ class HeatingCurveSensor(SensorEntity):
             "min_flow_temperature": state.get("min_flow_temp", 20.0),
             "max_flow_temperature": state.get("max_flow_temp", 75.0),
             "calculation_mode": state.get("calculation_mode", MODE_CLASSIC),
+            "hysteresis": state.get("hysteresis", 1.0),
             "outdoor_sensor": self._outdoor_sensor,
         }
         
@@ -273,4 +290,5 @@ class HeatingCurveSensor(SensorEntity):
         
         # With room temp mode: both temps required
         return self._outdoor_temp is not None and self._room_temp is not None
+
 
