@@ -24,6 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "min_flow_temp": entry.data.get("min_flow_temp", 20.0),
             "max_flow_temp": entry.data.get("max_flow_temp", 75.0),
             "calculation_mode": entry.data.get("calculation_mode", "classic"),
+            "hysteresis": entry.data.get("hysteresis", 1.0),
         }
     }
 
@@ -48,4 +49,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload config entry when options change."""
     await hass.config_entries.async_reload(entry.entry_id)
+
+
 
