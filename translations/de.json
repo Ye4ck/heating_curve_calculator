@@ -3,17 +3,11 @@
     "step": {
       "user": {
         "title": "Heizkurve konfigurieren",
-        "description": "Richten Sie die Heizkurvenberechnung ein.",
+        "description": "Wählen Sie die Temperatursensoren aus. Alle anderen Parameter können nach der Einrichtung über die Number- und Select-Entitäten angepasst werden.",
         "data": {
           "name": "Name",
           "outdoor_sensor": "Außentemperatur Sensor",
-          "room_sensor": "Raumtemperatur Sensor (optional)",
-          "curve_slope": "Heizkurven-Steilheit",
-          "curve_level": "Heizkurven-Niveau (Parallelverschiebung)",
-          "room_temp_target": "Raum-Solltemperatur",
-          "min_flow_temp": "Minimale Vorlauftemperatur",
-          "max_flow_temp": "Maximale Vorlauftemperatur",
-          "calculation_mode": "Berechnungsmodus"
+          "room_sensor": "Raumtemperatur Sensor (optional)"
         },
         "data_description": {
           "room_sensor": "Optional: Sensor für Raumtemperatur-Rückkopplung"
@@ -31,16 +25,10 @@
   "options": {
     "step": {
       "init": {
-        "title": "Heizkurven-Parameter anpassen",
-        "description": "Passen Sie die Parameter der Heizkurve an.",
+        "title": "Raumsensor anpassen",
+        "description": "Ändern Sie den Raumtemperatursensor. Alle anderen Parameter können über die Number- und Select-Entitäten angepasst werden.",
         "data": {
-          "room_sensor": "Raumtemperatur Sensor (optional)",
-          "curve_slope": "Heizkurven-Steilheit",
-          "curve_level": "Heizkurven-Niveau (Parallelverschiebung)",
-          "room_temp_target": "Raum-Solltemperatur",
-          "min_flow_temp": "Minimale Vorlauftemperatur",
-          "max_flow_temp": "Maximale Vorlauftemperatur",
-          "calculation_mode": "Berechnungsmodus"
+          "room_sensor": "Raumtemperatur Sensor (optional)"
         }
       }
     }
