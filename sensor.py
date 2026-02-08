@@ -273,3 +273,4 @@ class HeatingCurveSensor(SensorEntity):
         
         # With room temp mode: both temps required
         return self._outdoor_temp is not None and self._room_temp is not None
+
