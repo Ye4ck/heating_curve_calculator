@@ -24,6 +24,16 @@ A Home Assistant custom integration for calculating optimal flow temperature bas
 
 ### Installation
 
+### HACS (Recommended)
+
+1. Make sure [HACS](https://hacs.xyz/) is installed
+2. Open HACS → ⋮ → Custom repositories
+3. Add: `https://github.com/Ye4ck/heating_curve_calculator`
+4. Category: **Integration**
+5. Search for "Heating Curve Calculator" and install it
+6. Restart Home Assistant
+7. Add the integration via Settings → Devices & Services
+
 #### Manual Installation
 
 1. Copy the `custom_components/heating_curve` folder to your Home Assistant `custom_components` directory
