@@ -1,100 +1,296 @@
 # Heating Curve Calculator for Home Assistant
 
-## Setup
+[English](#english) | [Deutsch](#deutsch)
 
-1. Go to **Settings** → **Devices & Services**
-2. Click on **+ Add Integration**
-3. Search for **"Heating Curve Calculator"**
-4. Follow the configuration wizard:
-   - **Name**: Give your heating curve a name (e.g., "Living Room Heating")
-   - **Outdoor Temperature Sensor**: Choose your outdoor temperature sensor
-   - **Room Temperature Sensor** (optional): Only for the "With Room Temperature" mode
-   - **Calculation Mode**: Choose between classic or with room temperature
-5. Options:
-    - **Heating Curve Slope**: Typically 0.4 - 2.0 (Default: 1.4)
-   - **Heating Curve Level**: Parallel shift from -20 to +20°C (Default: 0)
-   - **Room Desired Temperature**: Desired room temperature (Default: 20°C)
-   - **Min/Max Flow Temperature**: Safety boundaries for the calculation
+---
 
-## Parameter Explanation
+## English
 
-### Heating Curve Slope
-- **Low Value (0.4-0.8)**: Flat curve, less change in flow temperature with outdoor temperature fluctuations
-  - Good for well-insulated buildings or underfloor heating
-- **Medium Value (1.0-1.5)**: Standard for typical radiators
-- **High Value (1.6-2.5)**: Steep curve, strong response to outdoor temperature
-  - For poorly insulated buildings or rapid heating
+A Home Assistant custom integration for calculating optimal flow temperature based on outdoor temperature using a heating curve with hysteresis.
 
-### Heating Curve Level (Parallel Shift)
-- **Positive Value (+5°C)**: Shifts the entire curve upwards → higher flow temperatures
-- **Negative Value (-5°C)**: Shifts the entire curve downwards → lower flow temperatures
-- Useful for fine-tuning without changing the slope
+### Features
 
-### Example Calculations
+- 🌡️ **Dynamic Flow Temperature Calculation** - Automatically calculates optimal flow temperature based on outdoor conditions
+- 📊 **Two Calculation Modes**:
+  - Classic mode (based on target room temperature)
+  - Room temperature feedback mode (uses actual room temperature)
+- 🎚️ **Fully Adjustable Parameters** - All parameters can be adjusted via Number and Select entities
+- 🔄 **Hysteresis Support** - Prevents frequent temperature changes and reduces wear on heating system
+- 🎛️ **Real-time Updates** - Changes take effect immediately without restarting
+- 🌐 **Multi-language Support** - English and German translations included
 
-With default settings (Slope: 1.4, Level: 0, Desired Temperature: 20°C):
+### Installation
 
-| Outdoor Temperature | Calculation | Flow Temperature |
-|---------------------|-------------|------------------|
-| -10°C | 20 + 1.4 × (20 - (-10)) + 0 | **62°C** |
-| 0°C   | 20 + 1.4 × (20 - 0) + 0     | **48°C** |
-| 10°C  | 20 + 1.4 × (20 - 10) + 0    | **34°C** |
-| 15°C  | 20 + 1.4 × (20 - 15) + 0    | **27°C** |
+#### Manual Installation
 
+1. Copy the `custom_components/heating_curve` folder to your Home Assistant `custom_components` directory
+2. Restart Home Assistant
+3. Add the integration via Settings → Devices & Services → Add Integration → "Heating Curve Calculator"
 
+### Configuration
 
+#### Initial Setup
 
-## Einrichtung
+During setup, you only need to configure:
 
-1. Gehe zu **Einstellungen** → **Geräte & Dienste**
-2. Klicke auf **+ Integration hinzufügen**
-3. Suche nach **"Heating Curve Calculator"**
-4. Folge dem Konfigurationsassistenten:
-   - **Name**: Gib deiner Heizkurve einen Namen (z.B. "Wohnzimmer Heizung")
-   - **Außentemperatur Sensor**: Wähle deinen Außentemperatur-Sensor
-   - **Raumtemperatur Sensor** (optional): Nur für Modus "Mit Raumtemperatur"
-   - **Berechnungsmodus**: Wähle zwischen klassisch oder mit Raumtemperatur
-5. Optionen:
-   - **Heizkurven-Steilheit**: Typisch 0.4 - 2.0 (Standard: 1.4)
-   - **Heizkurven-Niveau**: Parallelverschiebung -20 bis +20°C (Standard: 0)
-   - **Raum-Solltemperatur**: Gewünschte Raumtemperatur (Standard: 20°C)
-   - **Min/Max Vorlauftemperatur**: Sicherheitsgrenzen für die Berechnung
+- **Name** - A friendly name for your heating curve
+- **Outdoor Temperature Sensor** - Your outdoor temperature sensor (required)
+- **Room Temperature Sensor** - Optional sensor for room temperature feedback
 
-## Berechnungsmodi
+#### Adjustable Parameters (Number Entities)
 
-### Modus 1: Klassisch (ohne Raumtemperatur)
+All heating parameters can be adjusted anytime via the created Number entities:
+
+| Entity | Description | Range | Default | Unit |
+|--------|-------------|-------|---------|------|
+| Curve Slope | Steepness of the heating curve | 0.1 - 5.0 | 1.4 | - |
+| Curve Level | Parallel shift of the heating curve | -20.0 - 20.0 | 0.0 | °C |
+| Target Room Temperature | Desired room temperature | 15.0 - 25.0 | 20.0 | °C |
+| Min Flow Temperature | Minimum flow temperature | 15.0 - 50.0 | 20.0 | °C |
+| Max Flow Temperature | Maximum flow temperature | 40.0 - 90.0 | 75.0 | °C |
+| Hysteresis | Temperature change threshold | 0.0 - 5.0 | 1.0 | °C |
+
+#### Calculation Mode (Select Entity)
+
+- **Classic** - Uses target room temperature for calculation
+- **With Room Temperature** - Uses actual room temperature (requires room sensor)
+
+### How It Works
+
+#### Heating Curve Formula
+
+**Classic Mode:**
 ```
-T_Vorlauf = T_Raum-Soll + Steilheit × (T_Raum-Soll - T_Außen) + Niveau
+T_flow = T_room_target + slope × (T_room_target - T_outdoor) + level
 ```
-Verwendet die Soll-Raumtemperatur für die Berechnung. Ideal für einfache Systeme ohne Raumtemperatur-Feedback.
 
-### Modus 2: Mit Raumtemperatur-Rückkopplung
+**With Room Temperature Mode:**
 ```
-T_Vorlauf = T_Raum-Soll + Steilheit × (T_Raum-Ist - T_Außen) + Niveau
+T_flow = T_room_target + slope × (T_room_actual - T_outdoor) + level
 ```
-Verwendet die tatsächliche Raumtemperatur für die Berechnung. Passt sich dynamisch an tatsächliche Bedingungen an. **Benötigt einen Raumtemperatur-Sensor!**
 
-## Parameter-Erklärung
+The result is clamped between min and max flow temperature.
 
-### Heizkurven-Steilheit
-- **Niedriger Wert (0.4-0.8)**: Flache Kurve, weniger Vorlauftemperatur-Änderung bei Außentemperatur-Schwankungen
-  - Gut für gut isolierte Gebäude oder Fußbodenheizung
-- **Mittlerer Wert (1.0-1.5)**: Standard für normale Heizkörper
-- **Hoher Wert (1.6-2.5)**: Steile Kurve, starke Reaktion auf Außentemperatur
-  - Für schlecht isolierte Gebäude oder schnelle Aufheizung
+#### Hysteresis
 
-### Heizkurven-Niveau (Parallelverschiebung)
-- **Positiver Wert (+5°C)**: Verschiebt die gesamte Kurve nach oben → höhere Vorlauftemperaturen
-- **Negativer Wert (-5°C)**: Verschiebt die gesamte Kurve nach unten → niedrigere Vorlauftemperaturen
-- Nützlich für Feinabstimmung ohne die Steilheit zu ändern
+Hysteresis prevents the flow temperature from changing too frequently:
 
-### Beispiel-Berechnungen
+- The calculated flow temperature only changes when the difference exceeds the hysteresis value
+- Example with 1.0°C hysteresis:
+  - Current: 45.0°C, Calculated: 45.5°C → **No change** (< 1.0°C difference)
+  - Current: 45.0°C, Calculated: 46.2°C → **Change to 46.2°C** (≥ 1.0°C difference)
 
-Mit Standard-Einstellungen (Steilheit: 1.4, Niveau: 0, Solltemperatur: 20°C):
+**Benefits:**
+- Reduces heating system on/off cycles
+- Extends equipment lifetime
+- More stable heating behavior
+- Lower energy consumption
 
-| Außentemperatur | Berechnung | Vorlauftemperatur |
-|-----------------|------------|-------------------|
-| -10°C | 20 + 1.4 × (20 - (-10)) + 0 | **62°C** |
-| 0°C | 20 + 1.4 × (20 - 0) + 0 | **48°C** |
-| 10°C | 20 + 1.4 × (20 - 10) + 0 | **34°C** |
-| 15°C | 20 + 1.4 × (20 - 15) + 0 | **27°C** |
+**Recommended Settings:**
+- Underfloor heating: 0.5-1.0°C (slow response system)
+- Radiators: 1.0-1.5°C (faster response system)
+- Unstable sensors: 1.5-2.0°C
+
+### Entities
+
+The integration creates the following entities:
+
+#### Sensor
+- `sensor.[name]_vorlauftemperatur` - Calculated flow temperature
+
+#### Number Entities
+- `number.[name]_heizkurven_steilheit` - Curve Slope
+- `number.[name]_heizkurven_niveau` - Curve Level
+- `number.[name]_raum_solltemperatur` - Target Room Temperature
+- `number.[name]_min_vorlauftemperatur` - Min Flow Temperature
+- `number.[name]_max_vorlauftemperatur` - Max Flow Temperature
+- `number.[name]_hysterese` - Hysteresis
+
+#### Select Entity
+- `select.[name]_berechnungsmodus` - Calculation Mode
+
+### Sensor Attributes
+
+The flow temperature sensor provides additional attributes:
+
+```yaml
+outdoor_temperature: 5.2
+room_temperature_actual: 21.3  # if room sensor configured
+curve_slope: 1.4
+curve_level: 0.0
+room_temperature_target: 20.0
+min_flow_temperature: 20.0
+max_flow_temperature: 75.0
+calculation_mode: classic
+hysteresis: 1.0
+outdoor_sensor: sensor.outdoor_temp
+room_sensor: sensor.living_room_temp  # if configured
+```
+
+### Example Automation
+
+```yaml
+automation:
+  - alias: "Adjust heating curve in winter"
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.outdoor_temp
+        below: 0
+    action:
+      - service: number.set_value
+        target:
+          entity_id: number.heating_curve_curve_slope
+        data:
+          value: 1.6
+```
+
+### Support
+
+- 🐛 [Report Issues](https://github.com/Ye4ck/heating_curve_calculator/issues)
+
+---
+
+## Deutsch
+
+Eine Home Assistant Custom Integration zur Berechnung der optimalen Vorlauftemperatur basierend auf der Außentemperatur mittels einer Heizkurve mit Hysterese.
+
+### Funktionen
+
+- 🌡️ **Dynamische Vorlauftemperatur-Berechnung** - Berechnet automatisch die optimale Vorlauftemperatur basierend auf den Außenbedingungen
+- 📊 **Zwei Berechnungsmodi**:
+  - Klassischer Modus (basierend auf Raum-Solltemperatur)
+  - Raumtemperatur-Rückkopplungs-Modus (verwendet tatsächliche Raumtemperatur)
+- 🎚️ **Vollständig anpassbare Parameter** - Alle Parameter können über Number- und Select-Entitäten angepasst werden
+- 🔄 **Hysterese-Unterstützung** - Verhindert häufige Temperaturänderungen und reduziert Verschleiß der Heizungsanlage
+- 🎛️ **Echtzeit-Updates** - Änderungen wirken sofort ohne Neustart
+- 🌐 **Mehrsprachige Unterstützung** - Englische und deutsche Übersetzungen enthalten
+
+### Installation
+
+#### Manuelle Installation
+
+1. Kopiere den Ordner `custom_components/heating_curve` in dein Home Assistant `custom_components` Verzeichnis
+2. Starte Home Assistant neu
+3. Füge die Integration über Einstellungen → Geräte & Dienste → Integration hinzufügen → "Heating Curve Calculator" hinzu
+
+### Konfiguration
+
+#### Ersteinrichtung
+
+Bei der Einrichtung musst du nur konfigurieren:
+
+- **Name** - Ein freundlicher Name für deine Heizkurve
+- **Außentemperatur-Sensor** - Dein Außentemperatursensor (erforderlich)
+- **Raumtemperatur-Sensor** - Optionaler Sensor für Raumtemperatur-Rückkopplung
+
+#### Anpassbare Parameter (Number-Entitäten)
+
+Alle Heizparameter können jederzeit über die erstellten Number-Entitäten angepasst werden:
+
+| Entität | Beschreibung | Bereich | Standard | Einheit |
+|---------|--------------|---------|----------|---------|
+| Heizkurven-Steilheit | Steilheit der Heizkurve | 0.1 - 5.0 | 1.4 | - |
+| Heizkurven-Niveau | Parallelverschiebung der Heizkurve | -20.0 - 20.0 | 0.0 | °C |
+| Raum-Solltemperatur | Gewünschte Raumtemperatur | 15.0 - 25.0 | 20.0 | °C |
+| Min. Vorlauftemperatur | Minimale Vorlauftemperatur | 15.0 - 50.0 | 20.0 | °C |
+| Max. Vorlauftemperatur | Maximale Vorlauftemperatur | 40.0 - 90.0 | 75.0 | °C |
+| Hysterese | Schwellwert für Temperaturänderung | 0.0 - 5.0 | 1.0 | °C |
+
+#### Berechnungsmodus (Select-Entität)
+
+- **Klassisch** - Verwendet Raum-Solltemperatur für Berechnung
+- **Mit Raumtemperatur** - Verwendet tatsächliche Raumtemperatur (benötigt Raumsensor)
+
+### Funktionsweise
+
+#### Heizkurven-Formel
+
+**Klassischer Modus:**
+```
+T_vorlauf = T_raum_soll + Steilheit × (T_raum_soll - T_außen) + Niveau
+```
+
+**Mit Raumtemperatur-Modus:**
+```
+T_vorlauf = T_raum_soll + Steilheit × (T_raum_ist - T_außen) + Niveau
+```
+
+Das Ergebnis wird zwischen minimaler und maximaler Vorlauftemperatur begrenzt.
+
+#### Hysterese
+
+Die Hysterese verhindert zu häufige Änderungen der Vorlauftemperatur:
+
+- Die berechnete Vorlauftemperatur ändert sich nur, wenn die Differenz den Hysterese-Wert überschreitet
+- Beispiel mit 1.0°C Hysterese:
+  - Aktuell: 45.0°C, Berechnet: 45.5°C → **Keine Änderung** (< 1.0°C Differenz)
+  - Aktuell: 45.0°C, Berechnet: 46.2°C → **Änderung auf 46.2°C** (≥ 1.0°C Differenz)
+
+**Vorteile:**
+- Reduziert Ein/Aus-Zyklen der Heizung
+- Verlängert Lebensdauer der Komponenten
+- Stabileres Heizverhalten
+- Geringerer Energieverbrauch
+
+**Empfohlene Einstellungen:**
+- Fußbodenheizung: 0.5-1.0°C (träges System)
+- Radiatoren: 1.0-1.5°C (schnelleres System)
+- Instabile Sensoren: 1.5-2.0°C
+
+### Entitäten
+
+Die Integration erstellt folgende Entitäten:
+
+#### Sensor
+- `sensor.[name]_vorlauftemperatur` - Berechnete Vorlauftemperatur
+
+#### Number-Entitäten
+- `number.[name]_heizkurven_steilheit` - Heizkurven-Steilheit
+- `number.[name]_heizkurven_niveau` - Heizkurven-Niveau
+- `number.[name]_raum_solltemperatur` - Raum-Solltemperatur
+- `number.[name]_min_vorlauftemperatur` - Min. Vorlauftemperatur
+- `number.[name]_max_vorlauftemperatur` - Max. Vorlauftemperatur
+- `number.[name]_hysterese` - Hysterese
+
+#### Select-Entität
+- `select.[name]_berechnungsmodus` - Berechnungsmodus
+
+### Sensor-Attribute
+
+Der Vorlauftemperatur-Sensor bietet zusätzliche Attribute:
+
+```yaml
+outdoor_temperature: 5.2
+room_temperature_actual: 21.3  # falls Raumsensor konfiguriert
+curve_slope: 1.4
+curve_level: 0.0
+room_temperature_target: 20.0
+min_flow_temperature: 20.0
+max_flow_temperature: 75.0
+calculation_mode: classic
+hysteresis: 1.0
+outdoor_sensor: sensor.outdoor_temp
+room_sensor: sensor.living_room_temp  # falls konfiguriert
+```
+
+### Beispiel-Automatisierung
+
+```yaml
+automation:
+  - alias: "Heizkurve im Winter anpassen"
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.outdoor_temp
+        below: 0
+    action:
+      - service: number.set_value
+        target:
+          entity_id: number.heating_curve_heizkurven_steilheit
+        data:
+          value: 1.6
+```
+
+### Support
+
+- 🐛 [Probleme melden](https://github.com/Ye4ck/heating_curve_calculator/issues)
+
