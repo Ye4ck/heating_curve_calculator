@@ -1,5 +1,8 @@
 # Heating Curve Calculator for Home Assistant
 
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
+[![GitHub release](https://img.shields.io/github/release/Ye4ck/heating_curve_calculator.svg)](https://github.com/Ye4ck/heating_curve_calculator/releases)
+
 [English](#english) | [Deutsch](#deutsch)
 
 ---
@@ -166,6 +169,16 @@ Eine Home Assistant Custom Integration zur Berechnung der optimalen Vorlauftempe
 - 🌐 **Mehrsprachige Unterstützung** - Englische und deutsche Übersetzungen enthalten
 
 ### Installation
+
+### HACS (empfohlen)
+
+1. Stelle sicher, dass [HACS](https://hacs.xyz/) installiert ist
+2. Öffne HACS → ⋮ → Custom repositories
+3. Füge hinzu: `https://github.com/Ye4ck/heating_curve_calculator`
+4. Kategorie: **Integration**
+5. Suche nach "Heating Curve Calculator" und installiere es
+6. Starte Home Assistant neu
+7. Füge die Integration über Einstellungen → Geräte & Dienste hinzu
 
 #### Manuelle Installation
 
