@@ -3,17 +3,11 @@
     "step": {
       "user": {
         "title": "Configure Heating Curve",
-        "description": "Set up the heating curve calculation.",
+        "description": "Select the temperature sensors. All other parameters can be adjusted via the Number and Select entities after setup.",
         "data": {
           "name": "Name",
           "outdoor_sensor": "Outdoor Temperature Sensor",
-          "room_sensor": "Room Temperature Sensor (optional)",
-          "curve_slope": "Heating Curve Slope",
-          "curve_level": "Heating Curve Level (Parallel Shift)",
-          "room_temp_target": "Room Target Temperature",
-          "min_flow_temp": "Minimum Flow Temperature",
-          "max_flow_temp": "Maximum Flow Temperature",
-          "calculation_mode": "Calculation Mode"
+          "room_sensor": "Room Temperature Sensor (optional)"
         },
         "data_description": {
           "room_sensor": "Optional: Sensor for room temperature feedback"
@@ -31,16 +25,10 @@
   "options": {
     "step": {
       "init": {
-        "title": "Adjust Heating Curve Parameters",
-        "description": "Adjust the heating curve parameters.",
+        "title": "Adjust Room Sensor",
+        "description": "Change the room temperature sensor. All other parameters can be adjusted via the Number and Select entities.",
         "data": {
-          "room_sensor": "Room Temperature Sensor (optional)",
-          "curve_slope": "Heating Curve Slope",
-          "curve_level": "Heating Curve Level (Parallel Shift)",
-          "room_temp_target": "Room Target Temperature",
-          "min_flow_temp": "Minimum Flow Temperature",
-          "max_flow_temp": "Maximum Flow Temperature",
-          "calculation_mode": "Calculation Mode"
+          "room_sensor": "Room Temperature Sensor (optional)"
         }
       }
     }
@@ -65,3 +53,4 @@
     }
   }
 }
+
