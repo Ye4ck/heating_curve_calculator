@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     DOMAIN,
@@ -17,9 +17,25 @@ from .const import (
     CONF_MIN_FLOW_TEMP,
     CONF_MAX_FLOW_TEMP,
     CONF_HYSTERESIS,
+    DEFAULT_CURVE_SLOPE,
+    DEFAULT_CURVE_LEVEL,
+    DEFAULT_ROOM_TEMP_TARGET,
+    DEFAULT_MIN_FLOW_TEMP,
+    DEFAULT_MAX_FLOW_TEMP,
+    DEFAULT_HYSTERESIS,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+# Mapping from key to default value
+_DEFAULTS = {
+    "curve_slope": DEFAULT_CURVE_SLOPE,
+    "curve_level": DEFAULT_CURVE_LEVEL,
+    "room_temp_target": DEFAULT_ROOM_TEMP_TARGET,
+    "min_flow_temp": DEFAULT_MIN_FLOW_TEMP,
+    "max_flow_temp": DEFAULT_MAX_FLOW_TEMP,
+    "hysteresis": DEFAULT_HYSTERESIS,
+}
 
 
 async def async_setup_entry(
@@ -101,7 +117,7 @@ async def async_setup_entry(
     async_add_entities(numbers, True)
 
 
-class HeatingCurveNumber(NumberEntity):
+class HeatingCurveNumber(NumberEntity, RestoreEntity):
     """Representation of a Heating Curve number entity."""
 
     _attr_has_entity_name = True
@@ -142,12 +158,42 @@ class HeatingCurveNumber(NumberEntity):
             "name": device_name,
             "manufacturer": "Custom",
             "model": "Heating Curve Calculator",
-            "sw_version": "2.0.0",
+            "sw_version": "2.1.0",
         }
         
-        # Get initial value from state
-        entry_data = hass.data[DOMAIN][config_entry.entry_id]
-        self._attr_native_value = entry_data["state"].get(key, min_value)
+        # Set default value (will be overridden in async_added_to_hass)
+        self._attr_native_value = _DEFAULTS.get(key, min_value)
+
+    async def async_added_to_hass(self) -> None:
+        """Restore last known value when entity is added to hass."""
+        await super().async_added_to_hass()
+
+        # Try to restore the previous state
+        last_state = await self.async_get_last_state()
+        if (
+            last_state is not None
+            and last_state.state not in (None, "unknown", "unavailable")
+        ):
+            try:
+                restored_value = float(last_state.state)
+                # Clamp to valid range
+                restored_value = max(
+                    self._attr_native_min_value,
+                    min(self._attr_native_max_value, restored_value),
+                )
+                self._attr_native_value = restored_value
+                _LOGGER.debug(
+                    "Restored %s to %s", self._key, restored_value
+                )
+            except (ValueError, TypeError):
+                _LOGGER.warning(
+                    "Could not restore %s, using default", self._key
+                )
+
+        # Sync the restored (or default) value into hass.data so the
+        # sensor and other entities see it immediately
+        entry_data = self.hass.data[DOMAIN][self._config_entry.entry_id]
+        entry_data["state"][self._key] = self._attr_native_value
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
@@ -173,6 +219,6 @@ class HeatingCurveNumber(NumberEntity):
         """Update the entity."""
         # Get current value from state
         entry_data = self.hass.data[DOMAIN][self._config_entry.entry_id]
-        self._attr_native_value = entry_data["state"].get(self._key, self._attr_native_min_value)
-
-
+        self._attr_native_value = entry_data["state"].get(
+            self._key, self._attr_native_value
+        )
