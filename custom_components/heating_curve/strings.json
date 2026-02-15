@@ -23,9 +23,10 @@
   "options": {
     "step": {
       "init": {
-        "title": "Adjust Room Sensor",
-        "description": "Change the room temperature sensor. All other parameters can be adjusted via the Number and Select entities.",
+        "title": "Adjust Sensors",
+        "description": "Change the temperature sensors. All other parameters can be adjusted via the Number and Select entities.",
         "data": {
+          "outdoor_sensor": "Outdoor Temperature Sensor",
           "room_sensor": "Room Temperature Sensor"
         }
       }
