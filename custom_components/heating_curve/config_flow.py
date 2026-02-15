@@ -76,21 +76,24 @@ class HeatingCurveConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry):
         """Get the options flow for this handler."""
-        return HeatingCurveOptionsFlow(config_entry)
+        return HeatingCurveOptionsFlow()
 
 
 class HeatingCurveOptionsFlow(config_entries.OptionsFlow):
     """Handle options flow for Heating Curve Calculator."""
 
-    def __init__(self, config_entry):
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
     async def async_step_init(self, user_input=None):
-        """Manage the options - only room sensor can be changed here."""
+        """Manage the options - sensors can be changed here."""
         errors = {}
         
         if user_input is not None:
+            # Validate outdoor sensor
+            outdoor_sensor = user_input.get(CONF_OUTDOOR_SENSOR)
+            if outdoor_sensor:
+                outdoor_state = self.hass.states.get(outdoor_sensor)
+                if outdoor_state is None:
+                    errors[CONF_OUTDOOR_SENSOR] = "sensor_not_found"
+
             # Validate room sensor if provided
             room_sensor = user_input.get(CONF_ROOM_SENSOR)
             if room_sensor:
@@ -99,7 +102,7 @@ class HeatingCurveOptionsFlow(config_entries.OptionsFlow):
                     errors[CONF_ROOM_SENSOR] = "sensor_not_found"
             
             if not errors:
-                # Update config entry with new room sensor
+                # Update config entry with new sensors
                 self.hass.config_entries.async_update_entry(
                     self.config_entry,
                     data={**self.config_entry.data, **user_input},
@@ -109,16 +112,33 @@ class HeatingCurveOptionsFlow(config_entries.OptionsFlow):
         # Get current values from config entry
         current_data = self.config_entry.data
 
-        data_schema = vol.Schema(
-            {
-                vol.Optional(CONF_ROOM_SENSOR, default=current_data.get(CONF_ROOM_SENSOR, "")): selector.EntitySelector(
-                    selector.EntitySelectorConfig(
-                        domain="sensor",
-                        device_class="temperature",
-                    )
-                ),
-            }
-        )
+        room_default = current_data.get(CONF_ROOM_SENSOR)
+
+        schema_dict = {
+            vol.Required(CONF_OUTDOOR_SENSOR, default=current_data.get(CONF_OUTDOOR_SENSOR)): selector.EntitySelector(
+                selector.EntitySelectorConfig(
+                    domain="sensor",
+                    device_class="temperature",
+                )
+            ),
+        }
+
+        if room_default:
+            schema_dict[vol.Optional(CONF_ROOM_SENSOR, default=room_default)] = selector.EntitySelector(
+                selector.EntitySelectorConfig(
+                    domain="sensor",
+                    device_class="temperature",
+                )
+            )
+        else:
+            schema_dict[vol.Optional(CONF_ROOM_SENSOR)] = selector.EntitySelector(
+                selector.EntitySelectorConfig(
+                    domain="sensor",
+                    device_class="temperature",
+                )
+            )
+
+        data_schema = vol.Schema(schema_dict)
 
         return self.async_show_form(step_id="init", data_schema=data_schema, errors=errors)
 
