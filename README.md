@@ -157,6 +157,31 @@ automation:
           value: 1.6
 ```
 
+### Lovelace Card
+
+[#lovelace-card](#lovelace-card)
+
+The integration ships with a custom Lovelace card (`heating-curve-card`) that plots your heating curve as a graph, including the current operating point and the hysteresis band around it.
+
+The card is registered automatically as a frontend resource when the integration starts - no manual resource setup needed. Just add it to a dashboard:
+
+```yaml
+type: custom:heating-curve-card
+entity: sensor.heating_curve_vorlauftemperatur
+title: Heating Curve
+```
+
+| Option     | Description                                    | Default        |
+| ---------- | ----------------------------------------------- | -------------- |
+| `entity`   | The flow temperature sensor entity (required)   | -              |
+| `title`    | Card title                                      | `Heizkurve`    |
+| `min_outdoor` | Left edge of the graph's outdoor temperature axis | `-20`       |
+| `max_outdoor` | Right edge of the graph's outdoor temperature axis | `20`       |
+
+The graph shows the calculated curve across the configured outdoor temperature range, dashed lines for min/max flow temperature, and a marker with a shaded band for the current flow temperature ± hysteresis.
+
+If you installed manually instead of via HACS and the card doesn't appear, add it once as a Lovelace resource: Settings → Dashboards → Resources → `/heating_curve_calculator/heating-curve-card.js`, type "JavaScript Module".
+
 ### Support
 
 - 🐛 [Report Issues](https://github.com/Ye4ck/heating_curve_calculator/issues)
@@ -312,6 +337,31 @@ automation:
         data:
           value: 1.6
 ```
+
+### Lovelace Card
+
+[#lovelace-card-1](#lovelace-card-1)
+
+Die Integration bringt eine eigene Lovelace Card (`heating-curve-card`) mit, die deine Heizkurve als Graph darstellt - inklusive aktuellem Betriebspunkt und dem Hysterese-Band darum.
+
+Die Card wird beim Start der Integration automatisch als Frontend-Ressource registriert - keine manuelle Ressourcen-Einrichtung nötig. Einfach zu einem Dashboard hinzufügen:
+
+```yaml
+type: custom:heating-curve-card
+entity: sensor.heizkurve_vorlauftemperatur
+title: Heizkurve
+```
+
+| Option        | Beschreibung                                          | Standard    |
+| ------------- | ------------------------------------------------------ | ----------- |
+| `entity`      | Die Vorlauftemperatur-Sensor-Entität (erforderlich)     | -           |
+| `title`       | Titel der Card                                          | `Heizkurve` |
+| `min_outdoor` | Linker Rand der Außentemperatur-Achse im Graph          | `-20`       |
+| `max_outdoor` | Rechter Rand der Außentemperatur-Achse im Graph         | `20`        |
+
+Der Graph zeigt die berechnete Kurve über den eingestellten Außentemperaturbereich, gestrichelte Linien für Min./Max.-Vorlauftemperatur sowie einen Marker mit schattiertem Band für die aktuelle Vorlauftemperatur ± Hysterese.
+
+Falls du manuell statt über HACS installiert hast und die Card nicht erscheint, trage sie einmalig als Lovelace-Ressource ein: Einstellungen → Dashboards → Ressourcen → `/heating_curve_calculator/heating-curve-card.js`, Typ "JavaScript-Modul".
 
 ### Support
 
