@@ -159,8 +159,6 @@ automation:
 
 ### Lovelace Card
 
-[#lovelace-card](#lovelace-card)
-
 The integration ships with a custom Lovelace card (`heating-curve-card`) that plots your heating curve as a graph, including the current operating point and the hysteresis band around it.
 
 The card is registered automatically as a frontend resource when the integration starts - no manual resource setup needed. Just add it to a dashboard:
@@ -339,8 +337,6 @@ automation:
 ```
 
 ### Lovelace Card
-
-[#lovelace-card-1](#lovelace-card-1)
 
 Die Integration bringt eine eigene Lovelace Card (`heating-curve-card`) mit, die deine Heizkurve als Graph darstellt - inklusive aktuellem Betriebspunkt und dem Hysterese-Band darum.
 
