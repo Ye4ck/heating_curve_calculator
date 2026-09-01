@@ -43,6 +43,21 @@
   },
   "entity": {
     "number": {
+      "curve_slope": {
+        "name": "Heizkurven-Steilheit"
+      },
+      "curve_level": {
+        "name": "Heizkurven-Niveau"
+      },
+      "room_temp_target": {
+        "name": "Raum-Solltemperatur"
+      },
+      "min_flow_temp": {
+        "name": "Min. Vorlauftemperatur"
+      },
+      "max_flow_temp": {
+        "name": "Max. Vorlauftemperatur"
+      },
       "hysteresis": {
         "name": "Hysterese"
       }
@@ -54,6 +69,11 @@
           "classic": "Klassisch",
           "with_room_temp": "Mit Raumtemperatur"
         }
+      }
+    },
+    "sensor": {
+      "flow_temperature": {
+        "name": "Vorlauftemperatur"
       }
     }
   }
