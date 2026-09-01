@@ -19,6 +19,7 @@ from .const import (
     CONF_ROOM_SENSOR,
     MODE_CLASSIC,
     MODE_WITH_ROOM_TEMP,
+    SW_VERSION,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,7 +63,7 @@ class HeatingCurveSensor(SensorEntity):
         """Initialize the sensor."""
         self.hass = hass
         self._config_entry = config_entry
-        self._attr_name = "Vorlauftemperatur"
+        self._attr_translation_key = "flow_temperature"
         self._outdoor_sensor = outdoor_sensor
         self._room_sensor = room_sensor
         self._attr_native_value = None
@@ -79,7 +80,7 @@ class HeatingCurveSensor(SensorEntity):
             "name": name,
             "manufacturer": "Custom",
             "model": "Heating Curve Calculator",
-            "sw_version": "2.0.0",
+            "sw_version": SW_VERSION,
         }
 
     async def async_added_to_hass(self) -> None:
@@ -290,5 +291,3 @@ class HeatingCurveSensor(SensorEntity):
         
         # With room temp mode: both temps required
         return self._outdoor_temp is not None and self._room_temp is not None
-
-
