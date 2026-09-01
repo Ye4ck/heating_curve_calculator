@@ -26,6 +26,7 @@ DEFAULT_ROOM_TEMP_TARGET = 20.0
 DEFAULT_MIN_FLOW_TEMP = 20.0
 DEFAULT_MAX_FLOW_TEMP = 75.0
 DEFAULT_CALCULATION_MODE = MODE_CLASSIC
+
+# Keep in sync with manifest.json "version" - shown as device sw_version
+SW_VERSION = "1.3.0"
 DEFAULT_HYSTERESIS = 1.0
-
-
