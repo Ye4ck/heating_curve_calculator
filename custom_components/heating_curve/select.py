@@ -15,6 +15,7 @@ from .const import (
     MODE_CLASSIC,
     MODE_WITH_ROOM_TEMP,
     DEFAULT_CALCULATION_MODE,
+    SW_VERSION,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,7 +47,6 @@ class HeatingCurveSelect(SelectEntity, RestoreEntity):
         """Initialize the select entity."""
         self.hass = hass
         self._config_entry = config_entry
-        self._attr_name = "Berechnungsmodus"
         
         # Get device name
         device_name = config_entry.data.get(CONF_NAME, "Heating Curve")
@@ -60,7 +60,7 @@ class HeatingCurveSelect(SelectEntity, RestoreEntity):
             "name": device_name,
             "manufacturer": "Custom",
             "model": "Heating Curve Calculator",
-            "sw_version": "2.1.0",
+            "sw_version": SW_VERSION,
         }
         
         # Set default (will be overridden in async_added_to_hass)
