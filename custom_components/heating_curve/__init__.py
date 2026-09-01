@@ -36,12 +36,12 @@ async def _async_register_frontend_resource(hass: HomeAssistant) -> None:
         from homeassistant.components.http import StaticPathConfig
 
         await hass.http.async_register_static_paths(
-            [StaticPathConfig(CARD_URL_PATH, str(www_path / CARD_FILENAME), True)]
+            [StaticPathConfig(CARD_URL_PATH, str(www_path / CARD_FILENAME), False)]
         )
     except ImportError:
         # Home Assistant < 2024.7 (deprecated but functional API)
         hass.http.register_static_path(
-            CARD_URL_PATH, str(www_path / CARD_FILENAME), True
+            CARD_URL_PATH, str(www_path / CARD_FILENAME), False
         )
 
     from homeassistant.components.frontend import add_extra_js_url
