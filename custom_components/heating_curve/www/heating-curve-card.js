@@ -15,6 +15,10 @@ const HC_STRINGS = {
     modeRoomTemp: "Room temp.",
     pickerDescription:
       "Displays the Heating Curve Calculator's curve as a graph, including the current operating point and hysteresis band.",
+    editorEntity: "Flow temperature sensor",
+    editorTitle: "Card title",
+    editorMinOutdoor: "Outdoor axis minimum (°C)",
+    editorMaxOutdoor: "Outdoor axis maximum (°C)",
   },
   de: {
     entityRequired: "Bitte eine Entität angeben (den Heizkurven-Sensor).",
@@ -30,6 +34,10 @@ const HC_STRINGS = {
     modeRoomTemp: "Raumtemp.",
     pickerDescription:
       "Zeigt die Heizkurve des Heating Curve Calculator als Graph inkl. aktuellem Betriebspunkt und Hysterese-Band.",
+    editorEntity: "Vorlauftemperatur-Sensor",
+    editorTitle: "Titel der Card",
+    editorMinOutdoor: "Außentemp.-Achse Minimum (°C)",
+    editorMaxOutdoor: "Außentemp.-Achse Maximum (°C)",
   },
 };
 
@@ -196,7 +204,7 @@ class HeatingCurveCard extends HTMLElement {
   }
 
   static getConfigElement() {
-    return document.createElement("hui-generic-entity-row");
+    return document.createElement("heating-curve-card-editor");
   }
 
   static getStubConfig(hass) {
@@ -206,6 +214,67 @@ class HeatingCurveCard extends HTMLElement {
     return { entity: entities[0] || "", title: t.defaultTitle };
   }
 }
+
+class HeatingCurveCardEditor extends HTMLElement {
+  setConfig(config) {
+    this._config = config;
+    this._render();
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    this._render();
+  }
+
+  get _schema() {
+    return [
+      { name: "entity", selector: { entity: { domain: "sensor" } } },
+      { name: "title", selector: { text: {} } },
+      { name: "min_outdoor", selector: { number: { mode: "box", step: 1 } } },
+      { name: "max_outdoor", selector: { number: { mode: "box", step: 1 } } },
+    ];
+  }
+
+  _computeLabel = (schema) => {
+    const labels = {
+      entity: t.editorEntity,
+      title: t.editorTitle,
+      min_outdoor: t.editorMinOutdoor,
+      max_outdoor: t.editorMaxOutdoor,
+    };
+    return labels[schema.name] || schema.name;
+  };
+
+  _render() {
+    if (!this._hass || !this._config) {
+      return;
+    }
+
+    if (!this._form) {
+      this._form = document.createElement("ha-form");
+      this._form.addEventListener("value-changed", (ev) => {
+        ev.stopPropagation();
+        const newConfig = ev.detail.value;
+        this._config = newConfig;
+        this.dispatchEvent(
+          new CustomEvent("config-changed", {
+            detail: { config: newConfig },
+            bubbles: true,
+            composed: true,
+          })
+        );
+      });
+      this.appendChild(this._form);
+    }
+
+    this._form.hass = this._hass;
+    this._form.data = this._config;
+    this._form.schema = this._schema;
+    this._form.computeLabel = this._computeLabel;
+  }
+}
+
+customElements.define("heating-curve-card-editor", HeatingCurveCardEditor);
 
 customElements.define("heating-curve-card", HeatingCurveCard);
 
