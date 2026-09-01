@@ -42,6 +42,21 @@
   },
   "entity": {
     "number": {
+      "curve_slope": {
+        "name": "Curve Slope"
+      },
+      "curve_level": {
+        "name": "Curve Level"
+      },
+      "room_temp_target": {
+        "name": "Room Target Temperature"
+      },
+      "min_flow_temp": {
+        "name": "Min. Flow Temperature"
+      },
+      "max_flow_temp": {
+        "name": "Max. Flow Temperature"
+      },
       "hysteresis": {
         "name": "Hysteresis"
       }
@@ -50,7 +65,11 @@
       "calculation_mode": {
         "name": "Calculation Mode"
       }
+    },
+    "sensor": {
+      "flow_temperature": {
+        "name": "Flow Temperature"
+      }
     }
   }
 }
-
