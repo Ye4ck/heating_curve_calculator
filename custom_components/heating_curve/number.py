@@ -23,6 +23,7 @@ from .const import (
     DEFAULT_MIN_FLOW_TEMP,
     DEFAULT_MAX_FLOW_TEMP,
     DEFAULT_HYSTERESIS,
+    SW_VERSION,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +51,6 @@ async def async_setup_entry(
             hass,
             config_entry,
             "curve_slope",
-            "Heizkurven-Steilheit",
             "mdi:chart-line",
             0.1,
             5.0,
@@ -61,7 +61,6 @@ async def async_setup_entry(
             hass,
             config_entry,
             "curve_level",
-            "Heizkurven-Niveau",
             "mdi:arrow-up-down",
             -20.0,
             20.0,
@@ -72,7 +71,6 @@ async def async_setup_entry(
             hass,
             config_entry,
             "room_temp_target",
-            "Raum-Solltemperatur",
             "mdi:home-thermometer",
             15.0,
             25.0,
@@ -83,7 +81,6 @@ async def async_setup_entry(
             hass,
             config_entry,
             "min_flow_temp",
-            "Min. Vorlauftemperatur",
             "mdi:thermometer-chevron-down",
             15.0,
             50.0,
@@ -94,7 +91,6 @@ async def async_setup_entry(
             hass,
             config_entry,
             "max_flow_temp",
-            "Max. Vorlauftemperatur",
             "mdi:thermometer-chevron-up",
             40.0,
             90.0,
@@ -105,7 +101,6 @@ async def async_setup_entry(
             hass,
             config_entry,
             "hysteresis",
-            "Hysterese",
             "mdi:swap-horizontal",
             0.0,
             5.0,
@@ -128,7 +123,6 @@ class HeatingCurveNumber(NumberEntity, RestoreEntity):
         hass: HomeAssistant,
         config_entry: ConfigEntry,
         key: str,
-        name: str,
         icon: str,
         min_value: float,
         max_value: float,
@@ -139,7 +133,7 @@ class HeatingCurveNumber(NumberEntity, RestoreEntity):
         self.hass = hass
         self._config_entry = config_entry
         self._key = key
-        self._attr_name = name
+        self._attr_translation_key = key
         self._attr_icon = icon
         self._attr_native_min_value = min_value
         self._attr_native_max_value = max_value
@@ -158,7 +152,7 @@ class HeatingCurveNumber(NumberEntity, RestoreEntity):
             "name": device_name,
             "manufacturer": "Custom",
             "model": "Heating Curve Calculator",
-            "sw_version": "2.1.0",
+            "sw_version": SW_VERSION,
         }
         
         # Set default value (will be overridden in async_added_to_hass)
