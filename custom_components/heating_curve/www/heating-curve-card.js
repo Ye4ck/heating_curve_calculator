@@ -1,5 +1,3 @@
-const HC_LANG = (navigator.language || "en").toLowerCase().startsWith("de") ? "de" : "en";
-
 const HC_STRINGS = {
   en: {
     entityRequired: "Please define an entity (the heating curve sensor).",
@@ -19,6 +17,10 @@ const HC_STRINGS = {
     editorTitle: "Card title",
     editorMinOutdoor: "Outdoor axis minimum (°C)",
     editorMaxOutdoor: "Outdoor axis maximum (°C)",
+    editorStyleSection: "Style",
+    editorCurveColor: "Curve color",
+    editorPointColor: "Current point color",
+    editorShowGrid: "Show grid lines",
   },
   de: {
     entityRequired: "Bitte eine Entität angeben (den Heizkurven-Sensor).",
@@ -38,13 +40,47 @@ const HC_STRINGS = {
     editorTitle: "Titel der Card",
     editorMinOutdoor: "Außentemp.-Achse Minimum (°C)",
     editorMaxOutdoor: "Außentemp.-Achse Maximum (°C)",
+    editorStyleSection: "Stil",
+    editorCurveColor: "Kurvenfarbe",
+    editorPointColor: "Farbe aktueller Punkt",
+    editorShowGrid: "Gitterlinien anzeigen",
   },
 };
 
-const t = HC_STRINGS[HC_LANG];
+// Determine the active language from Home Assistant's own configured
+// language, not the browser/OS locale (navigator.language) - a user can
+// easily have HA set to English while their device is set to German, or
+// vice versa, and the card should follow HA's setting.
+function hcGetLang(hass) {
+  const lang =
+    (hass && (hass.language || (hass.locale && hass.locale.language))) ||
+    (typeof document !== "undefined" && document.documentElement && document.documentElement.lang) ||
+    (typeof navigator !== "undefined" && navigator.language) ||
+    "en";
+  return String(lang).toLowerCase().startsWith("de") ? "de" : "en";
+}
+
+function hcT(hass) {
+  return HC_STRINGS[hcGetLang(hass)];
+}
+
+// Absolute temperature: full °C -> °F formula (with offset)
+function hcToDisplayAbs(value, unit) {
+  if (value == null) return null;
+  return unit === "°F" ? (value * 9) / 5 + 32 : value;
+}
+
+// Inverse of hcToDisplayAbs: HA already converts the primary sensor state
+// to the display unit automatically (device_class temperature); we need it
+// back in °C to keep it consistent with the attrs (which stay raw °C).
+function hcFromDisplayAbs(value, unit) {
+  if (value == null) return null;
+  return unit === "°F" ? ((value - 32) * 5) / 9 : value;
+}
 
 class HeatingCurveCard extends HTMLElement {
   setConfig(config) {
+    const t = hcT(this._hass);
     if (!config.entity) {
       throw new Error(t.entityRequired);
     }
@@ -58,6 +94,7 @@ class HeatingCurveCard extends HTMLElement {
 
   set hass(hass) {
     this._hass = hass;
+    const t = hcT(hass);
     const stateObj = hass.states[this._config.entity];
 
     if (!stateObj) {
@@ -106,7 +143,9 @@ class HeatingCurveCard extends HTMLElement {
   }
 
   _updateCard(stateObj) {
+    const t = hcT(this._hass);
     const attrs = stateObj.attributes || {};
+    const displayUnit = attrs.display_unit || "°C";
     const slope = Number(attrs.curve_slope ?? 1.4);
     const level = Number(attrs.curve_level ?? 0.0);
     const target = Number(attrs.room_temperature_target ?? 20.0);
@@ -116,10 +155,14 @@ class HeatingCurveCard extends HTMLElement {
     const mode = attrs.calculation_mode ?? "classic";
     const outdoorNow = attrs.outdoor_temperature;
     const roomActual = attrs.room_temperature_actual;
-    const flowNow =
+    // stateObj.state is already converted to displayUnit by HA (device_class
+    // temperature) - normalize back to °C so it's consistent with the attrs,
+    // which always stay in raw °C internally.
+    const flowNowRaw =
       stateObj.state !== "unknown" && stateObj.state !== "unavailable"
         ? Number(stateObj.state)
         : null;
+    const flowNow = hcFromDisplayAbs(flowNowRaw, displayUnit);
 
     const refTemp =
       mode === "with_room_temp" && roomActual != null ? Number(roomActual) : target;
@@ -151,22 +194,31 @@ class HeatingCurveCard extends HTMLElement {
 
     const gridColor = "var(--divider-color, #ccc)";
     const axisColor = "var(--secondary-text-color, #888)";
-    const curveColor = "var(--primary-color, #03a9f4)";
-    const pointColor = "var(--state-active-color, var(--primary-color, #ff9800))";
+    const curveColor = this._config.curve_color
+      ? `rgb(${this._config.curve_color.join(",")})`
+      : "var(--primary-color, #03a9f4)";
+    const pointColor = this._config.point_color
+      ? `rgb(${this._config.point_color.join(",")})`
+      : "var(--state-active-color, var(--primary-color, #ff9800))";
+    const showGrid = this._config.show_grid !== false;
 
     let svg = "";
 
-    for (let gx = Math.ceil(minX / 5) * 5; gx <= maxX; gx += 5) {
-      const px = xToPx(gx);
-      svg += `<line x1="${px}" y1="${padT}" x2="${px}" y2="${padT + h}" stroke="${gridColor}" stroke-width="0.5" />`;
-      svg += `<text x="${px}" y="${padT + h + 14}" font-size="9" fill="${axisColor}" text-anchor="middle">${gx}°</text>`;
-    }
-    const yTicks = 4;
-    for (let i = 0; i <= yTicks; i++) {
-      const gy = minY + ((maxY - minY) * i) / yTicks;
-      const py = yToPx(gy);
-      svg += `<line x1="${padL}" y1="${py}" x2="${padL + w}" y2="${py}" stroke="${gridColor}" stroke-width="0.5" />`;
-      svg += `<text x="${padL - 6}" y="${py + 3}" font-size="9" fill="${axisColor}" text-anchor="end">${Math.round(gy)}°</text>`;
+    if (showGrid) {
+      for (let gx = Math.ceil(minX / 5) * 5; gx <= maxX; gx += 5) {
+        const px = xToPx(gx);
+        const label = Math.round(hcToDisplayAbs(gx, displayUnit));
+        svg += `<line x1="${px}" y1="${padT}" x2="${px}" y2="${padT + h}" stroke="${gridColor}" stroke-width="0.5" />`;
+        svg += `<text x="${px}" y="${padT + h + 14}" font-size="9" fill="${axisColor}" text-anchor="middle">${label}°</text>`;
+      }
+      const yTicks = 4;
+      for (let i = 0; i <= yTicks; i++) {
+        const gy = minY + ((maxY - minY) * i) / yTicks;
+        const py = yToPx(gy);
+        const label = Math.round(hcToDisplayAbs(gy, displayUnit));
+        svg += `<line x1="${padL}" y1="${py}" x2="${padL + w}" y2="${py}" stroke="${gridColor}" stroke-width="0.5" />`;
+        svg += `<text x="${padL - 6}" y="${py + 3}" font-size="9" fill="${axisColor}" text-anchor="end">${label}°</text>`;
+      }
     }
 
     svg += `<line x1="${padL}" y1="${yToPx(minFlow)}" x2="${padL + w}" y2="${yToPx(minFlow)}" stroke="${axisColor}" stroke-dasharray="3,3" stroke-width="0.75" />`;
@@ -179,9 +231,10 @@ class HeatingCurveCard extends HTMLElement {
       const cy = yToPx(flowNow);
       const bandTop = yToPx(Math.min(maxFlow, flowNow + hysteresis));
       const bandBottom = yToPx(Math.max(minFlow, flowNow - hysteresis));
+      const flowNowDisplay = hcToDisplayAbs(flowNow, displayUnit);
       svg += `<rect x="${cx - 5}" y="${bandTop}" width="10" height="${bandBottom - bandTop}" fill="${pointColor}" opacity="0.15" />`;
       svg += `<circle cx="${cx}" cy="${cy}" r="5" fill="${pointColor}" stroke="var(--card-background-color, white)" stroke-width="1.5" />`;
-      svg += `<text x="${cx}" y="${cy - 10}" font-size="10" fill="${pointColor}" text-anchor="middle" font-weight="600">${flowNow.toFixed(1)}°C</text>`;
+      svg += `<text x="${cx}" y="${cy - 10}" font-size="10" fill="${pointColor}" text-anchor="middle" font-weight="600">${flowNowDisplay.toFixed(1)}${displayUnit}</text>`;
     }
 
     svg += `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + h}" stroke="${axisColor}" stroke-width="1" />`;
@@ -190,11 +243,11 @@ class HeatingCurveCard extends HTMLElement {
     this._svg.innerHTML = svg;
 
     this._legend.innerHTML = `
-      <span>${t.outdoor}: <b>${outdoorNow != null ? Number(outdoorNow).toFixed(1) + "°C" : "–"}</b></span>
-      <span>${t.flow}: <b>${flowNow != null ? flowNow.toFixed(1) + "°C" : "–"}</b></span>
+      <span>${t.outdoor}: <b>${outdoorNow != null ? hcToDisplayAbs(Number(outdoorNow), displayUnit).toFixed(1) + displayUnit : "–"}</b></span>
+      <span>${t.flow}: <b>${flowNow != null ? hcToDisplayAbs(flowNow, displayUnit).toFixed(1) + displayUnit : "–"}</b></span>
       <span>${t.slope}: <b>${slope}</b></span>
-      <span>${t.level}: <b>${level}°C</b></span>
-      <span>${t.hysteresis}: <b>${hysteresis}°C</b></span>
+      <span>${t.level}: <b>${level.toFixed(1)} K</b></span>
+      <span>${t.hysteresis}: <b>${hysteresis.toFixed(1)} K</b></span>
       <span>${t.mode}: <b>${mode === "with_room_temp" ? t.modeRoomTemp : t.modeClassic}</b></span>
     `;
   }
@@ -208,6 +261,7 @@ class HeatingCurveCard extends HTMLElement {
   }
 
   static getStubConfig(hass) {
+    const t = hcT(hass);
     const entities = Object.keys(hass.states).filter((e) =>
       e.startsWith("sensor.") && e.includes("vorlauftemperatur")
     );
@@ -227,20 +281,38 @@ class HeatingCurveCardEditor extends HTMLElement {
   }
 
   get _schema() {
+    const t = hcT(this._hass);
     return [
       { name: "entity", selector: { entity: { domain: "sensor" } } },
       { name: "title", selector: { text: {} } },
       { name: "min_outdoor", selector: { number: { mode: "box", step: 1 } } },
       { name: "max_outdoor", selector: { number: { mode: "box", step: 1 } } },
+      {
+        type: "expandable",
+        name: "style_section",
+        title: t.editorStyleSection,
+        iconPath:
+          "M20.71,5.63L19.37,4.29C19,3.9 18.35,3.9 17.96,4.29L9,13.25L10.75,15L19.71,6.04C20.1,5.65 20.1,5 20.71,5.63M7,14A3,3 0 0,0 4,17C4,18.31 2.84,19 2,19C2.92,20.22 4.5,21 6,21A4,4 0 0,0 10,17A3,3 0 0,0 7,14Z",
+        flatten: true,
+        schema: [
+          { name: "curve_color", selector: { color_rgb: {} } },
+          { name: "point_color", selector: { color_rgb: {} } },
+          { name: "show_grid", selector: { boolean: {} } },
+        ],
+      },
     ];
   }
 
   _computeLabel = (schema) => {
+    const t = hcT(this._hass);
     const labels = {
       entity: t.editorEntity,
       title: t.editorTitle,
       min_outdoor: t.editorMinOutdoor,
       max_outdoor: t.editorMaxOutdoor,
+      curve_color: t.editorCurveColor,
+      point_color: t.editorPointColor,
+      show_grid: t.editorShowGrid,
     };
     return labels[schema.name] || schema.name;
   };
@@ -282,5 +354,5 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "heating-curve-card",
   name: "Heating Curve Card",
-  description: t.pickerDescription,
+  description: hcT().pickerDescription,
 });
