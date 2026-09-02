@@ -12,6 +12,7 @@ from homeassistant.const import UnitOfTemperature, CONF_NAME
 from homeassistant.core import HomeAssistant, callback, Event
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
     DOMAIN,
@@ -83,6 +84,35 @@ class HeatingCurveSensor(SensorEntity):
             "sw_version": SW_VERSION,
         }
 
+    def _state_to_celsius(self, state) -> float | None:
+        """Read a state's numeric value and normalize it to °C.
+
+        External outdoor/room sensors may report in °F on Imperial-configured
+        systems. We always calculate internally in °C, so any reading is
+        converted based on the *source* entity's own unit, not our own.
+        """
+        try:
+            value = float(state.state)
+        except (ValueError, TypeError):
+            return None
+
+        source_unit = state.attributes.get(
+            "unit_of_measurement", UnitOfTemperature.CELSIUS
+        )
+        if source_unit == UnitOfTemperature.CELSIUS:
+            return value
+        try:
+            return TemperatureConverter.convert(
+                value, source_unit, UnitOfTemperature.CELSIUS
+            )
+        except (ValueError, KeyError):
+            _LOGGER.warning(
+                "Could not convert %s (unit %s) to °C, using raw value",
+                state.entity_id,
+                source_unit,
+            )
+            return value
+
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity is added."""
         # Track outdoor sensor state changes
@@ -93,10 +123,7 @@ class HeatingCurveSensor(SensorEntity):
             if new_state is None or new_state.state in ("unknown", "unavailable"):
                 self._outdoor_temp = None
             else:
-                try:
-                    self._outdoor_temp = float(new_state.state)
-                except (ValueError, TypeError):
-                    self._outdoor_temp = None
+                self._outdoor_temp = self._state_to_celsius(new_state)
             
             self.async_schedule_update_ha_state(True)
 
@@ -115,10 +142,7 @@ class HeatingCurveSensor(SensorEntity):
                 if new_state is None or new_state.state in ("unknown", "unavailable"):
                     self._room_temp = None
                 else:
-                    try:
-                        self._room_temp = float(new_state.state)
-                    except (ValueError, TypeError):
-                        self._room_temp = None
+                    self._room_temp = self._state_to_celsius(new_state)
                 
                 self.async_schedule_update_ha_state(True)
 
@@ -144,18 +168,12 @@ class HeatingCurveSensor(SensorEntity):
         # Initial state
         state = self.hass.states.get(self._outdoor_sensor)
         if state and state.state not in ("unknown", "unavailable"):
-            try:
-                self._outdoor_temp = float(state.state)
-            except (ValueError, TypeError):
-                pass
+            self._outdoor_temp = self._state_to_celsius(state)
         
         if self._room_sensor:
             room_state = self.hass.states.get(self._room_sensor)
             if room_state and room_state.state not in ("unknown", "unavailable"):
-                try:
-                    self._room_temp = float(room_state.state)
-                except (ValueError, TypeError):
-                    pass
+                self._room_temp = self._state_to_celsius(room_state)
 
     def calculate_flow_temperature(
         self,
@@ -269,6 +287,7 @@ class HeatingCurveSensor(SensorEntity):
             "calculation_mode": state.get("calculation_mode", MODE_CLASSIC),
             "hysteresis": state.get("hysteresis", 1.0),
             "outdoor_sensor": self._outdoor_sensor,
+            "display_unit": self.hass.config.units.temperature_unit,
         }
         
         # Add room temperature info if configured
