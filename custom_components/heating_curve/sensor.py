@@ -70,12 +70,9 @@ class HeatingCurveSensor(SensorEntity):
         self._attr_native_value = None
         self._outdoor_temp = None
         self._room_temp = None
-        self._last_output = None  # For hysteresis
-        
-        # Generate unique_id
+        self._last_output = None
+
         self._attr_unique_id = f"{config_entry.entry_id}_flow_temperature"
-        
-        # Device info
         self._attr_device_info = {
             "identifiers": {(DOMAIN, config_entry.entry_id)},
             "name": name,
@@ -115,7 +112,6 @@ class HeatingCurveSensor(SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity is added."""
-        # Track outdoor sensor state changes
         @callback
         def outdoor_sensor_listener(event: Event) -> None:
             """Handle outdoor sensor state changes."""
@@ -133,7 +129,6 @@ class HeatingCurveSensor(SensorEntity):
             )
         )
 
-        # Track room sensor if configured
         if self._room_sensor:
             @callback
             def room_sensor_listener(event: Event) -> None:
@@ -152,7 +147,6 @@ class HeatingCurveSensor(SensorEntity):
                 )
             )
 
-        # Listen for parameter changes from number/select entities
         @callback
         def parameter_changed_listener(event: Event) -> None:
             """Handle parameter changes."""
@@ -165,7 +159,6 @@ class HeatingCurveSensor(SensorEntity):
             )
         )
 
-        # Initial state
         state = self.hass.states.get(self._outdoor_sensor)
         if state and state.state not in ("unknown", "unavailable"):
             self._outdoor_temp = self._state_to_celsius(state)
@@ -208,15 +201,11 @@ class HeatingCurveSensor(SensorEntity):
         Returns:
             Calculated flow temperature in °C (clamped to min/max)
         """
-        # Determine which room temperature to use
         if calculation_mode == MODE_WITH_ROOM_TEMP and room_temp is not None:
-            # Use actual room temperature
             reference_temp = room_temp
         else:
-            # Use target room temperature (classic mode)
             reference_temp = room_temp_target
         
-        # Calculate base flow temperature using heating curve
         temp_difference = reference_temp - outdoor_temp
         flow_temp = (
             room_temp_target 
@@ -224,14 +213,12 @@ class HeatingCurveSensor(SensorEntity):
             + curve_level
         )
         
-        # Clamp to min/max limits
         flow_temp = max(min_flow, min(max_flow, flow_temp))
         
         return round(flow_temp, 1)
 
     async def async_update(self) -> None:
         """Update the sensor value."""
-        # Get current parameters from state
         entry_data = self.hass.data[DOMAIN][self._config_entry.entry_id]
         state = entry_data["state"]
         
@@ -255,18 +242,14 @@ class HeatingCurveSensor(SensorEntity):
                 calculation_mode=calculation_mode,
             )
             
-            # Apply hysteresis
             if self._last_output is None:
-                # First run, set directly
                 self._attr_native_value = new_value
                 self._last_output = new_value
             else:
-                # Check if change is larger than hysteresis
                 change = abs(new_value - self._last_output)
                 if change >= hysteresis:
                     self._attr_native_value = new_value
                     self._last_output = new_value
-                # else: keep old value (within hysteresis band)
         else:
             self._attr_native_value = None
             self._last_output = None
@@ -290,7 +273,6 @@ class HeatingCurveSensor(SensorEntity):
             "display_unit": self.hass.config.units.temperature_unit,
         }
         
-        # Add room temperature info if configured
         if self._room_sensor:
             attrs["room_sensor"] = self._room_sensor
             attrs["room_temperature_actual"] = self._room_temp
@@ -304,9 +286,7 @@ class HeatingCurveSensor(SensorEntity):
         state = entry_data["state"]
         calculation_mode = state.get("calculation_mode", MODE_CLASSIC)
         
-        # Classic mode: only outdoor temp required
         if calculation_mode == MODE_CLASSIC:
             return self._outdoor_temp is not None
         
-        # With room temp mode: both temps required
         return self._outdoor_temp is not None and self._room_temp is not None
