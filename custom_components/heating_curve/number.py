@@ -147,14 +147,9 @@ class HeatingCurveNumber(NumberEntity, RestoreEntity):
         self._attr_native_step = step
         self._attr_native_unit_of_measurement = unit
         self._attr_device_class = device_class
-        
-        # Get device name
+
         device_name = config_entry.data.get(CONF_NAME, "Heating Curve")
-        
-        # Generate unique_id
         self._attr_unique_id = f"{config_entry.entry_id}_{key}"
-        
-        # Device info
         self._attr_device_info = {
             "identifiers": {(DOMAIN, config_entry.entry_id)},
             "name": device_name,
@@ -162,15 +157,14 @@ class HeatingCurveNumber(NumberEntity, RestoreEntity):
             "model": "Heating Curve Calculator",
             "sw_version": SW_VERSION,
         }
-        
-        # Set default value (will be overridden in async_added_to_hass)
+
+        # Overridden with the restored value in async_added_to_hass, if any
         self._attr_native_value = _DEFAULTS.get(key, min_value)
 
     async def async_added_to_hass(self) -> None:
         """Restore last known value when entity is added to hass."""
         await super().async_added_to_hass()
 
-        # Try to restore the previous state
         last_state = await self.async_get_last_state()
         if (
             last_state is not None
@@ -178,7 +172,7 @@ class HeatingCurveNumber(NumberEntity, RestoreEntity):
         ):
             try:
                 restored_value = float(last_state.state)
-                # Clamp to valid range
+                # Clamp in case the valid range changed between versions
                 restored_value = max(
                     self._attr_native_min_value,
                     min(self._attr_native_max_value, restored_value),
@@ -199,15 +193,11 @@ class HeatingCurveNumber(NumberEntity, RestoreEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        # Update in hass.data
         entry_data = self.hass.data[DOMAIN][self._config_entry.entry_id]
         entry_data["state"][self._key] = value
         self._attr_native_value = value
-        
-        # Notify sensor to update
         self.async_write_ha_state()
-        
-        # Signal other entities to update
+
         self.hass.bus.async_fire(
             f"{DOMAIN}_parameter_changed",
             {
@@ -219,7 +209,6 @@ class HeatingCurveNumber(NumberEntity, RestoreEntity):
 
     async def async_update(self) -> None:
         """Update the entity."""
-        # Get current value from state
         entry_data = self.hass.data[DOMAIN][self._config_entry.entry_id]
         self._attr_native_value = entry_data["state"].get(
             self._key, self._attr_native_value
