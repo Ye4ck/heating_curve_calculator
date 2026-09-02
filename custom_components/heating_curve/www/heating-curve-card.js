@@ -227,7 +227,8 @@ class HeatingCurveCard extends HTMLElement {
     svg += `<path d="${d}" fill="none" stroke="${curveColor}" stroke-width="2.5" stroke-linecap="round" />`;
 
     if (outdoorNow != null && flowNow != null) {
-      const cx = xToPx(Number(outdoorNow));
+      const outdoorClamped = Math.max(minX, Math.min(maxX, Number(outdoorNow)));
+      const cx = xToPx(outdoorClamped);
       const cy = yToPx(flowNow);
       const bandTop = yToPx(Math.min(maxFlow, flowNow + hysteresis));
       const bandBottom = yToPx(Math.max(minFlow, flowNow - hysteresis));
