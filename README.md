@@ -110,18 +110,18 @@ Hysteresis prevents the flow temperature from changing too frequently:
 The integration creates the following entities:
 
 #### Sensor
-- `sensor.[name]_vorlauftemperatur` - Calculated flow temperature
-
+- `sensor.[name]_flow_temperature` - Calculated flow temperature
+  
 #### Number Entities
-- `number.[name]_heizkurven_steilheit` - Curve Slope
-- `number.[name]_heizkurven_niveau` - Curve Level
-- `number.[name]_raum_solltemperatur` - Target Room Temperature
-- `number.[name]_min_vorlauftemperatur` - Min Flow Temperature
-- `number.[name]_max_vorlauftemperatur` - Max Flow Temperature
-- `number.[name]_hysterese` - Hysteresis
-
+- `number.[name]_curve_slope` - Curve Slope
+- `number.[name]_curve_level` - Curve Level
+- `number.[name]_room_target_temperature` - Target Room Temperature
+- `number.[name]_min_flow_temperature` - Min Flow Temperature
+- `number.[name]_max_flow_temperature` - Max Flow Temperature
+- `number.[name]_hysteresis` - Hysteresis
+  
 #### Select Entity
-- `select.[name]_berechnungsmodus` - Calculation Mode
+- `select.[name]_calculation_mode` - Calculation Mode
 
 ### Sensor Attributes
 
