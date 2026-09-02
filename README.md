@@ -21,6 +21,7 @@ A Home Assistant custom integration for calculating optimal flow temperature bas
 - 🔄 **Hysteresis Support** - Prevents frequent temperature changes and reduces wear on heating system
 - 🎛️ **Real-time Updates** - Changes take effect immediately without restarting
 - 🌐 **Multi-language Support** - English and German translations included
+- 📈 **Custom Lovelace Card** - Visualizes the heating curve as a graph with a style editor (colors, grid toggle)
 
 ### Installation
 
@@ -159,9 +160,17 @@ automation:
 
 ### Lovelace Card
 
-The integration ships with a custom Lovelace card (`heating-curve-card`) that plots your heating curve as a graph, including the current operating point and the hysteresis band around it.
+The integration ships with a custom Lovelace card (`heating-curve-card`) that plots your heating curve as a graph, including the current operating point and the hysteresis band around it, plus a style editor (curve color, point color, grid toggle).
 
-The card is registered automatically as a frontend resource when the integration starts - no manual resource setup needed. Just add it to a dashboard:
+**Setup (one-time, after installing/updating the integration):**
+
+1. Go to Settings → Dashboards → ⋮ (top right) → Resources
+2. Click "Add Resource"
+3. URL: `/heating_curve_calculator/heating-curve-card.js`
+4. Resource type: **JavaScript Module**
+5. Save, then reload the dashboard once
+
+Then add the card itself, either via the visual card picker ("Heating Curve Card") or manually:
 
 ```yaml
 type: custom:heating-curve-card
@@ -169,16 +178,17 @@ entity: sensor.heating_curve_vorlauftemperatur
 title: Heating Curve
 ```
 
-| Option     | Description                                    | Default        |
-| ---------- | ----------------------------------------------- | -------------- |
-| `entity`   | The flow temperature sensor entity (required)   | -              |
-| `title`    | Card title                                      | `Heizkurve`    |
-| `min_outdoor` | Left edge of the graph's outdoor temperature axis | `-20`       |
-| `max_outdoor` | Right edge of the graph's outdoor temperature axis | `20`       |
+| Option        | Description                                        | Default     |
+| ------------- | --------------------------------------------------- | ----------- |
+| `entity`      | The flow temperature sensor entity (required)        | -           |
+| `title`       | Card title                                           | `Heizkurve` |
+| `min_outdoor` | Left edge of the graph's outdoor temperature axis (°C) | `-20`     |
+| `max_outdoor` | Right edge of the graph's outdoor temperature axis (°C) | `20`     |
+| `curve_color` | Curve line color (set via the visual editor's Style section) | theme default |
+| `point_color` | Current-point marker color (via the visual editor)   | theme default |
+| `show_grid`   | Show/hide the background grid lines                  | `true`      |
 
-The graph shows the calculated curve across the configured outdoor temperature range, dashed lines for min/max flow temperature, and a marker with a shaded band for the current flow temperature ± hysteresis.
-
-If you installed manually instead of via HACS and the card doesn't appear, add it once as a Lovelace resource: Settings → Dashboards → Resources → `/heating_curve_calculator/heating-curve-card.js`, type "JavaScript Module".
+The graph shows the calculated curve across the configured outdoor temperature range, dashed lines for min/max flow temperature, and a marker with a shaded band for the current flow temperature ± hysteresis. Curve Level and Hysteresis are shown in Kelvin (K), since they represent temperature *differences*, not absolute temperatures. The card automatically follows Home Assistant's configured language (English/German) and unit system (°C/°F).
 
 ### Support
 
@@ -200,6 +210,7 @@ Eine Home Assistant Custom Integration zur Berechnung der optimalen Vorlauftempe
 - 🔄 **Hysterese-Unterstützung** - Verhindert häufige Temperaturänderungen und reduziert Verschleiß der Heizungsanlage
 - 🎛️ **Echtzeit-Updates** - Änderungen wirken sofort ohne Neustart
 - 🌐 **Mehrsprachige Unterstützung** - Englische und deutsche Übersetzungen enthalten
+- 📈 **Eigene Lovelace Card** - Visualisiert die Heizkurve als Graph mit Style-Editor (Farben, Gitterlinien ein/aus)
 
 ### Installation
 
@@ -338,9 +349,17 @@ automation:
 
 ### Lovelace Card
 
-Die Integration bringt eine eigene Lovelace Card (`heating-curve-card`) mit, die deine Heizkurve als Graph darstellt - inklusive aktuellem Betriebspunkt und dem Hysterese-Band darum.
+Die Integration bringt eine eigene Lovelace Card (`heating-curve-card`) mit, die deine Heizkurve als Graph darstellt - inklusive aktuellem Betriebspunkt, Hysterese-Band und einem Style-Editor (Kurvenfarbe, Punktfarbe, Gitterlinien ein/aus).
 
-Die Card wird beim Start der Integration automatisch als Frontend-Ressource registriert - keine manuelle Ressourcen-Einrichtung nötig. Einfach zu einem Dashboard hinzufügen:
+**Einrichtung (einmalig, nach Installation/Update der Integration):**
+
+1. Einstellungen → Dashboards → ⋮ (oben rechts) → Ressourcen
+2. "Ressource hinzufügen" klicken
+3. URL: `/heating_curve_calculator/heating-curve-card.js`
+4. Ressourcentyp: **JavaScript-Modul**
+5. Speichern, danach das Dashboard einmal neu laden
+
+Danach die Card selbst hinzufügen, entweder über den visuellen Card-Picker ("Heating Curve Card") oder manuell:
 
 ```yaml
 type: custom:heating-curve-card
@@ -348,18 +367,18 @@ entity: sensor.heizkurve_vorlauftemperatur
 title: Heizkurve
 ```
 
-| Option        | Beschreibung                                          | Standard    |
-| ------------- | ------------------------------------------------------ | ----------- |
-| `entity`      | Die Vorlauftemperatur-Sensor-Entität (erforderlich)     | -           |
-| `title`       | Titel der Card                                          | `Heizkurve` |
-| `min_outdoor` | Linker Rand der Außentemperatur-Achse im Graph          | `-20`       |
-| `max_outdoor` | Rechter Rand der Außentemperatur-Achse im Graph         | `20`        |
+| Option        | Beschreibung                                            | Standard      |
+| ------------- | -------------------------------------------------------- | ------------- |
+| `entity`      | Die Vorlauftemperatur-Sensor-Entität (erforderlich)       | -             |
+| `title`       | Titel der Card                                            | `Heizkurve`   |
+| `min_outdoor` | Linker Rand der Außentemperatur-Achse im Graph (°C)       | `-20`         |
+| `max_outdoor` | Rechter Rand der Außentemperatur-Achse im Graph (°C)      | `20`          |
+| `curve_color` | Farbe der Kurvenlinie (über den Style-Bereich im Editor)  | Theme-Standard |
+| `point_color` | Farbe des aktuellen-Punkt-Markers (über den Editor)       | Theme-Standard |
+| `show_grid`   | Gitterlinien im Hintergrund ein-/ausblenden                | `true`        |
 
-Der Graph zeigt die berechnete Kurve über den eingestellten Außentemperaturbereich, gestrichelte Linien für Min./Max.-Vorlauftemperatur sowie einen Marker mit schattiertem Band für die aktuelle Vorlauftemperatur ± Hysterese.
-
-Falls du manuell statt über HACS installiert hast und die Card nicht erscheint, trage sie einmalig als Lovelace-Ressource ein: Einstellungen → Dashboards → Ressourcen → `/heating_curve_calculator/heating-curve-card.js`, Typ "JavaScript-Modul".
+Der Graph zeigt die berechnete Kurve über den eingestellten Außentemperaturbereich, gestrichelte Linien für Min./Max.-Vorlauftemperatur sowie einen Marker mit schattiertem Band für die aktuelle Vorlauftemperatur ± Hysterese. Niveau und Hysterese werden in Kelvin (K) angezeigt, da es sich um Temperatur-*Differenzen* handelt, nicht um absolute Temperaturen. Die Card folgt automatisch der in Home Assistant eingestellten Sprache (Deutsch/Englisch) und dem Einheitensystem (°C/°F).
 
 ### Support
 
 - 🐛 [Probleme melden](https://github.com/Ye4ck/heating_curve_calculator/issues)
-
