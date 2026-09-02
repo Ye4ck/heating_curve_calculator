@@ -1,4 +1,5 @@
 """The Heating Curve Calculator integration."""
+import asyncio
 import logging
 from pathlib import Path
 
@@ -13,7 +14,6 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "heating_curve"
 PLATFORMS = [Platform.SENSOR, Platform.NUMBER, Platform.SELECT]
 
-# Lovelace card frontend resource
 CARD_FILENAME = "heating-curve-card.js"
 CARD_URL_PATH = f"/heating_curve_calculator/{CARD_FILENAME}"
 # Cache-busting query string tied to the integration version: lets us keep
@@ -21,6 +21,7 @@ CARD_URL_PATH = f"/heating_curve_calculator/{CARD_FILENAME}"
 # fresh fetch whenever the integration updates, since the URL itself changes.
 CARD_URL_VERSIONED = f"{CARD_URL_PATH}?v={SW_VERSION}"
 _FRONTEND_REGISTERED_KEY = f"{DOMAIN}_frontend_registered"
+_FRONTEND_REGISTRATION_LOCK_KEY = f"{DOMAIN}_frontend_registration_lock"
 
 
 async def _async_register_frontend_resource(hass: HomeAssistant) -> None:
@@ -29,35 +30,50 @@ async def _async_register_frontend_resource(hass: HomeAssistant) -> None:
     This makes the card available to every dashboard automatically -
     the user only has to add the `heating-curve-card` card to their
     Lovelace config, without manually managing a Lovelace resource.
-    Safe to call multiple times; registration only happens once per
-    Home Assistant run.
+    Safe to call multiple times, including concurrently from multiple
+    config entries starting up at once: a lock makes the "already
+    registered?" check and the actual registration atomic, so only one
+    caller ever performs the registration.
     """
-    if hass.data.get(_FRONTEND_REGISTERED_KEY):
-        return
+    lock = hass.data.setdefault(_FRONTEND_REGISTRATION_LOCK_KEY, asyncio.Lock())
 
-    www_path = Path(__file__).parent / "www"
+    async with lock:
+        if hass.data.get(_FRONTEND_REGISTERED_KEY):
+            return
 
-    try:
-        # Home Assistant 2024.7+
-        from homeassistant.components.http import StaticPathConfig
+        www_path = Path(__file__).parent / "www"
 
-        await hass.http.async_register_static_paths(
-            [StaticPathConfig(CARD_URL_PATH, str(www_path / CARD_FILENAME), True)]
+        try:
+            try:
+                # Home Assistant 2024.7+
+                from homeassistant.components.http import StaticPathConfig
+
+                await hass.http.async_register_static_paths(
+                    [StaticPathConfig(CARD_URL_PATH, str(www_path / CARD_FILENAME), True)]
+                )
+            except ImportError:
+                # Home Assistant < 2024.7 (deprecated but functional API)
+                hass.http.register_static_path(
+                    CARD_URL_PATH, str(www_path / CARD_FILENAME), True
+                )
+        except RuntimeError as err:
+            # Defensive fallback: if the route is somehow already registered
+            # (e.g. a prior setup attempt that didn't fully unwind), treat
+            # that as success rather than failing this integration's setup.
+            if "already registered" not in str(err):
+                raise
+            _LOGGER.debug(
+                "heating-curve-card static path was already registered: %s", err
+            )
+
+        from homeassistant.components.frontend import add_extra_js_url
+
+        add_extra_js_url(hass, CARD_URL_VERSIONED)
+
+        hass.data[_FRONTEND_REGISTERED_KEY] = True
+        _LOGGER.debug(
+            "Registered heating-curve-card frontend resource at %s", CARD_URL_VERSIONED
         )
-    except ImportError:
-        # Home Assistant < 2024.7 (deprecated but functional API)
-        hass.http.register_static_path(
-            CARD_URL_PATH, str(www_path / CARD_FILENAME), True
-        )
-
-    from homeassistant.components.frontend import add_extra_js_url
-
-    add_extra_js_url(hass, CARD_URL_VERSIONED)
-
-    hass.data[_FRONTEND_REGISTERED_KEY] = True
-    _LOGGER.debug(
-        "Registered heating-curve-card frontend resource at %s", CARD_URL_VERSIONED
-    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -87,7 +103,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Register update listener for options flow
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     return True
