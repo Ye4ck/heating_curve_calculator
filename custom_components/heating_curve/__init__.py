@@ -6,6 +6,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.const import Platform
 
+from .const import SW_VERSION
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "heating_curve"
@@ -14,6 +16,10 @@ PLATFORMS = [Platform.SENSOR, Platform.NUMBER, Platform.SELECT]
 # Lovelace card frontend resource
 CARD_FILENAME = "heating-curve-card.js"
 CARD_URL_PATH = f"/heating_curve_calculator/{CARD_FILENAME}"
+# Cache-busting query string tied to the integration version: lets us keep
+# aggressive browser caching (fast, reliable loads) while guaranteeing a
+# fresh fetch whenever the integration updates, since the URL itself changes.
+CARD_URL_VERSIONED = f"{CARD_URL_PATH}?v={SW_VERSION}"
 _FRONTEND_REGISTERED_KEY = f"{DOMAIN}_frontend_registered"
 
 
@@ -36,20 +42,22 @@ async def _async_register_frontend_resource(hass: HomeAssistant) -> None:
         from homeassistant.components.http import StaticPathConfig
 
         await hass.http.async_register_static_paths(
-            [StaticPathConfig(CARD_URL_PATH, str(www_path / CARD_FILENAME), False)]
+            [StaticPathConfig(CARD_URL_PATH, str(www_path / CARD_FILENAME), True)]
         )
     except ImportError:
         # Home Assistant < 2024.7 (deprecated but functional API)
         hass.http.register_static_path(
-            CARD_URL_PATH, str(www_path / CARD_FILENAME), False
+            CARD_URL_PATH, str(www_path / CARD_FILENAME), True
         )
 
     from homeassistant.components.frontend import add_extra_js_url
 
-    add_extra_js_url(hass, CARD_URL_PATH)
+    add_extra_js_url(hass, CARD_URL_VERSIONED)
 
     hass.data[_FRONTEND_REGISTERED_KEY] = True
-    _LOGGER.debug("Registered heating-curve-card frontend resource at %s", CARD_URL_PATH)
+    _LOGGER.debug(
+        "Registered heating-curve-card frontend resource at %s", CARD_URL_VERSIONED
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
