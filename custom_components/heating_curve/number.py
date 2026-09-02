@@ -2,7 +2,7 @@
 import logging
 from typing import Any
 
-from homeassistant.components.number import NumberEntity, NumberMode
+from homeassistant.components.number import NumberEntity, NumberMode, NumberDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
@@ -56,6 +56,7 @@ async def async_setup_entry(
             5.0,
             0.1,
             None,
+            None,
         ),
         HeatingCurveNumber(
             hass,
@@ -65,7 +66,8 @@ async def async_setup_entry(
             -20.0,
             20.0,
             0.5,
-            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.KELVIN,
+            None,
         ),
         HeatingCurveNumber(
             hass,
@@ -76,6 +78,7 @@ async def async_setup_entry(
             25.0,
             0.5,
             UnitOfTemperature.CELSIUS,
+            NumberDeviceClass.TEMPERATURE,
         ),
         HeatingCurveNumber(
             hass,
@@ -86,6 +89,7 @@ async def async_setup_entry(
             50.0,
             1.0,
             UnitOfTemperature.CELSIUS,
+            NumberDeviceClass.TEMPERATURE,
         ),
         HeatingCurveNumber(
             hass,
@@ -96,6 +100,7 @@ async def async_setup_entry(
             90.0,
             1.0,
             UnitOfTemperature.CELSIUS,
+            NumberDeviceClass.TEMPERATURE,
         ),
         HeatingCurveNumber(
             hass,
@@ -105,7 +110,8 @@ async def async_setup_entry(
             0.0,
             5.0,
             0.1,
-            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.KELVIN,
+            None,
         ),
     ]
     
@@ -128,6 +134,7 @@ class HeatingCurveNumber(NumberEntity, RestoreEntity):
         max_value: float,
         step: float,
         unit: str | None,
+        device_class: NumberDeviceClass | None,
     ) -> None:
         """Initialize the number entity."""
         self.hass = hass
@@ -139,6 +146,7 @@ class HeatingCurveNumber(NumberEntity, RestoreEntity):
         self._attr_native_max_value = max_value
         self._attr_native_step = step
         self._attr_native_unit_of_measurement = unit
+        self._attr_device_class = device_class
         
         # Get device name
         device_name = config_entry.data.get(CONF_NAME, "Heating Curve")
