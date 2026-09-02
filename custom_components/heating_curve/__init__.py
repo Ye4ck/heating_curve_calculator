@@ -7,38 +7,38 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.const import Platform
 
-from .const import SW_VERSION
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "heating_curve"
 PLATFORMS = [Platform.SENSOR, Platform.NUMBER, Platform.SELECT]
 
 CARD_FILENAME = "heating-curve-card.js"
+# Stable, unversioned URL: the user adds this once as a manual Lovelace
+# resource (Settings -> Dashboards -> Resources), see README. Serving the
+# file with cache_headers=False means updates are picked up on the next
+# normal page reload, without the user having to edit the resource URL.
 CARD_URL_PATH = f"/heating_curve_calculator/{CARD_FILENAME}"
-# Cache-busting query string tied to the integration version: lets us keep
-# aggressive browser caching (fast, reliable loads) while guaranteeing a
-# fresh fetch whenever the integration updates, since the URL itself changes.
-CARD_URL_VERSIONED = f"{CARD_URL_PATH}?v={SW_VERSION}"
-_FRONTEND_REGISTERED_KEY = f"{DOMAIN}_frontend_registered"
-_FRONTEND_REGISTRATION_LOCK_KEY = f"{DOMAIN}_frontend_registration_lock"
+_STATIC_PATH_REGISTERED_KEY = f"{DOMAIN}_static_path_registered"
+_STATIC_PATH_LOCK_KEY = f"{DOMAIN}_static_path_lock"
 
 
-async def _async_register_frontend_resource(hass: HomeAssistant) -> None:
-    """Serve the bundled Lovelace card and register it as a frontend module.
+async def _async_serve_card_file(hass: HomeAssistant) -> None:
+    """Serve the bundled Lovelace card file at a stable, static URL.
 
-    This makes the card available to every dashboard automatically -
-    the user only has to add the `heating-curve-card` card to their
-    Lovelace config, without manually managing a Lovelace resource.
+    This only makes the file downloadable - it does NOT register it as a
+    Lovelace resource automatically. The user adds it once manually (see
+    README), which avoids the loading-order race that automatic frontend
+    registration (add_extra_js_url) has with Lovelace's own card picker.
+
     Safe to call multiple times, including concurrently from multiple
     config entries starting up at once: a lock makes the "already
     registered?" check and the actual registration atomic, so only one
-    caller ever performs the registration.
+    caller ever performs it.
     """
-    lock = hass.data.setdefault(_FRONTEND_REGISTRATION_LOCK_KEY, asyncio.Lock())
+    lock = hass.data.setdefault(_STATIC_PATH_LOCK_KEY, asyncio.Lock())
 
     async with lock:
-        if hass.data.get(_FRONTEND_REGISTERED_KEY):
+        if hass.data.get(_STATIC_PATH_REGISTERED_KEY):
             return
 
         www_path = Path(__file__).parent / "www"
@@ -49,12 +49,12 @@ async def _async_register_frontend_resource(hass: HomeAssistant) -> None:
                 from homeassistant.components.http import StaticPathConfig
 
                 await hass.http.async_register_static_paths(
-                    [StaticPathConfig(CARD_URL_PATH, str(www_path / CARD_FILENAME), True)]
+                    [StaticPathConfig(CARD_URL_PATH, str(www_path / CARD_FILENAME), False)]
                 )
             except ImportError:
                 # Home Assistant < 2024.7 (deprecated but functional API)
                 hass.http.register_static_path(
-                    CARD_URL_PATH, str(www_path / CARD_FILENAME), True
+                    CARD_URL_PATH, str(www_path / CARD_FILENAME), False
                 )
         except RuntimeError as err:
             # Defensive fallback: if the route is somehow already registered
@@ -66,14 +66,8 @@ async def _async_register_frontend_resource(hass: HomeAssistant) -> None:
                 "heating-curve-card static path was already registered: %s", err
             )
 
-        from homeassistant.components.frontend import add_extra_js_url
-
-        add_extra_js_url(hass, CARD_URL_VERSIONED)
-
-        hass.data[_FRONTEND_REGISTERED_KEY] = True
-        _LOGGER.debug(
-            "Registered heating-curve-card frontend resource at %s", CARD_URL_VERSIONED
-        )
+        hass.data[_STATIC_PATH_REGISTERED_KEY] = True
+        _LOGGER.debug("Serving heating-curve-card at %s", CARD_URL_PATH)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -97,9 +91,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     try:
-        await _async_register_frontend_resource(hass)
+        await _async_serve_card_file(hass)
     except Exception:  # noqa: BLE001 - never block setup because of the card
-        _LOGGER.exception("Could not register heating-curve-card frontend resource")
+        _LOGGER.exception("Could not serve heating-curve-card file")
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
