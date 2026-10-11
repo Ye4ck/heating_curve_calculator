@@ -87,6 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "max_flow_temp": 75.0,
             "calculation_mode": "classic",
             "hysteresis": 1.0,
+            "room_influence": 1.0,
         }
     }
 
