@@ -38,7 +38,12 @@ class HeatingCurveConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         errors[CONF_ROOM_SENSOR] = "sensor_not_found"
                 
                 if not errors:
-                    await self.async_set_unique_id(f"{outdoor_sensor}_heating_curve")
+                    # Name is part of the ID so several heating circuits
+                    # (e.g. radiators + underfloor) can share one sensor.
+                    name = user_input.get(CONF_NAME, "Heating Curve")
+                    await self.async_set_unique_id(
+                        f"{name}_{outdoor_sensor}_{room_sensor or ''}_heating_curve"
+                    )
                     self._abort_if_unique_id_configured()
 
                     return self.async_create_entry(
