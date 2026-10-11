@@ -17,12 +17,14 @@ from .const import (
     CONF_MIN_FLOW_TEMP,
     CONF_MAX_FLOW_TEMP,
     CONF_HYSTERESIS,
+    CONF_ROOM_SENSOR,
     DEFAULT_CURVE_SLOPE,
     DEFAULT_CURVE_LEVEL,
     DEFAULT_ROOM_TEMP_TARGET,
     DEFAULT_MIN_FLOW_TEMP,
     DEFAULT_MAX_FLOW_TEMP,
     DEFAULT_HYSTERESIS,
+    DEFAULT_ROOM_INFLUENCE,
     SW_VERSION,
 )
 
@@ -36,6 +38,7 @@ _DEFAULTS = {
     "min_flow_temp": DEFAULT_MIN_FLOW_TEMP,
     "max_flow_temp": DEFAULT_MAX_FLOW_TEMP,
     "hysteresis": DEFAULT_HYSTERESIS,
+    "room_influence": DEFAULT_ROOM_INFLUENCE,
 }
 
 
@@ -115,6 +118,21 @@ async def async_setup_entry(
         ),
     ]
     
+    if config_entry.data.get(CONF_ROOM_SENSOR):
+        numbers.append(
+            HeatingCurveNumber(
+                hass,
+                config_entry,
+                "room_influence",
+                "mdi:home-thermometer-outline",
+                0.1,
+                5.0,
+                0.1,
+                None,
+                None,
+            )
+        )
+
     async_add_entities(numbers, True)
 
 
