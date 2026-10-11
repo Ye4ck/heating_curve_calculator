@@ -178,16 +178,20 @@ class HeatingCurveSensor(SensorEntity):
         min_flow: float,
         max_flow: float,
         calculation_mode: str,
+        room_influence: float = 1.0,
     ) -> float:
         """Calculate flow temperature based on heating curve.
-        
-        Two modes:
-        1. Classic (without room temperature feedback):
-           T_flow = T_room_target + slope * (T_room_target - T_outdoor) + level
-           
-        2. With room temperature feedback:
-           T_flow = T_room_target + slope * (T_room_actual - T_outdoor) + level
-        
+
+        Classic:
+           T_flow = T_target + slope * (T_target - T_outdoor) + level
+
+        With room temperature feedback:
+           T_flow = T_target + slope * (T_target - T_outdoor) + level
+                    + factor * (T_target - T_room_actual)
+
+        A room colder than the target raises the flow temperature, a room
+        warmer than the target lowers it.
+
         Args:
             outdoor_temp: Current outdoor temperature in °C
             room_temp: Current room temperature in °C (optional)
@@ -197,24 +201,22 @@ class HeatingCurveSensor(SensorEntity):
             min_flow: Minimum flow temperature in °C
             max_flow: Maximum flow temperature in °C
             calculation_mode: "classic" or "with_room_temp"
-            
+            room_influence: Dimensionless factor for the room deviation
+
         Returns:
             Calculated flow temperature in °C (clamped to min/max)
         """
-        if calculation_mode == MODE_WITH_ROOM_TEMP and room_temp is not None:
-            reference_temp = room_temp
-        else:
-            reference_temp = room_temp_target
-        
-        temp_difference = reference_temp - outdoor_temp
         flow_temp = (
-            room_temp_target 
-            + curve_slope * temp_difference 
+            room_temp_target
+            + curve_slope * (room_temp_target - outdoor_temp)
             + curve_level
         )
-        
+
+        if calculation_mode == MODE_WITH_ROOM_TEMP and room_temp is not None:
+            flow_temp += room_influence * (room_temp_target - room_temp)
+
         flow_temp = max(min_flow, min(max_flow, flow_temp))
-        
+
         return round(flow_temp, 1)
 
     async def async_update(self) -> None:
@@ -229,6 +231,7 @@ class HeatingCurveSensor(SensorEntity):
         max_flow = state.get("max_flow_temp", 75.0)
         calculation_mode = state.get("calculation_mode", MODE_CLASSIC)
         hysteresis = state.get("hysteresis", 1.0)
+        room_influence = state.get("room_influence", 1.0)
 
         if self._outdoor_temp is not None:
             new_value = self.calculate_flow_temperature(
@@ -240,6 +243,7 @@ class HeatingCurveSensor(SensorEntity):
                 min_flow=min_flow,
                 max_flow=max_flow,
                 calculation_mode=calculation_mode,
+                room_influence=room_influence,
             )
             
             if self._last_output is None:
@@ -276,6 +280,7 @@ class HeatingCurveSensor(SensorEntity):
         if self._room_sensor:
             attrs["room_sensor"] = self._room_sensor
             attrs["room_temperature_actual"] = self._room_temp
+            attrs["room_influence"] = state.get("room_influence", 1.0)
         
         return attrs
 
