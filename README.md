@@ -62,12 +62,13 @@ All heating parameters can be adjusted anytime via the created Number entities:
 | Target Room Temperature | Desired room temperature | 15.0 - 25.0 | 20.0 | °C |
 | Min Flow Temperature | Minimum flow temperature | 15.0 - 50.0 | 20.0 | °C |
 | Max Flow Temperature | Maximum flow temperature | 40.0 - 90.0 | 75.0 | °C |
-| Hysteresis | Temperature change threshold | 0.0 - 5.0 | 1.0 | °C |
+| Hysteresis | Temperature change threshold | 0.0 - 5.0 | 1.0 | K |
+| Room Influence | Weight of the room deviation (only with room sensor) | 0.1 - 5.0 | 1.0 | - |
 
 #### Calculation Mode (Select Entity)
 
 - **Classic** - Uses target room temperature for calculation
-- **With Room Temperature** - Uses actual room temperature (requires room sensor)
+- **With Room Temperature** - Corrects the flow temperature by the deviation between target and actual room temperature (requires room sensor)
 
 ### How It Works
 
@@ -80,8 +81,11 @@ T_flow = T_room_target + slope × (T_room_target - T_outdoor) + level
 
 **With Room Temperature Mode:**
 ```
-T_flow = T_room_target + slope × (T_room_actual - T_outdoor) + level
+T_flow = T_room_target + slope × (T_room_target - T_outdoor) + level
+         + factor × (T_room_target - T_room_actual)
 ```
+
+A room colder than the target raises the flow temperature, a room warmer than the target lowers it. `factor` is the **Room Influence** (default 1.0, dimensionless): with 1.0, every Kelvin of room deviation changes the flow temperature by 1 K. The Room Influence entity only exists if a room sensor is configured.
 
 The result is clamped between min and max flow temperature.
 
@@ -119,6 +123,7 @@ The integration creates the following entities:
 - `number.[name]_min_flow_temperature` - Min Flow Temperature
 - `number.[name]_max_flow_temperature` - Max Flow Temperature
 - `number.[name]_hysteresis` - Hysteresis
+- `number.[name]_room_influence` - Room Influence (only with room sensor)
   
 #### Select Entity
 - `select.[name]_calculation_mode` - Calculation Mode
@@ -130,6 +135,7 @@ The flow temperature sensor provides additional attributes:
 ```yaml
 outdoor_temperature: 5.2
 room_temperature_actual: 21.3  # if room sensor configured
+room_influence: 1.0  # if room sensor configured
 curve_slope: 1.4
 curve_level: 0.0
 room_temperature_target: 20.0
@@ -251,12 +257,13 @@ Alle Heizparameter können jederzeit über die erstellten Number-Entitäten ange
 | Raum-Solltemperatur | Gewünschte Raumtemperatur | 15.0 - 25.0 | 20.0 | °C |
 | Min. Vorlauftemperatur | Minimale Vorlauftemperatur | 15.0 - 50.0 | 20.0 | °C |
 | Max. Vorlauftemperatur | Maximale Vorlauftemperatur | 40.0 - 90.0 | 75.0 | °C |
-| Hysterese | Schwellwert für Temperaturänderung | 0.0 - 5.0 | 1.0 | °C |
+| Hysterese | Schwellwert für Temperaturänderung | 0.0 - 5.0 | 1.0 | K |
+| Raumeinfluss | Gewichtung der Raumabweichung (nur mit Raumsensor) | 0.1 - 5.0 | 1.0 | - |
 
 #### Berechnungsmodus (Select-Entität)
 
 - **Klassisch** - Verwendet Raum-Solltemperatur für Berechnung
-- **Mit Raumtemperatur** - Verwendet tatsächliche Raumtemperatur (benötigt Raumsensor)
+- **Mit Raumtemperatur** - Korrigiert die Vorlauftemperatur anhand der Abweichung zwischen Raum-Soll und Raum-Ist (benötigt Raumsensor)
 
 ### Funktionsweise
 
@@ -269,8 +276,11 @@ T_vorlauf = T_raum_soll + Steilheit × (T_raum_soll - T_außen) + Niveau
 
 **Mit Raumtemperatur-Modus:**
 ```
-T_vorlauf = T_raum_soll + Steilheit × (T_raum_ist - T_außen) + Niveau
+T_vorlauf = T_raum_soll + Steilheit × (T_raum_soll - T_außen) + Niveau
+            + Faktor × (T_raum_soll - T_raum_ist)
 ```
+
+Ist der Raum kälter als der Sollwert, steigt die Vorlauftemperatur; ist er wärmer, sinkt sie. `Faktor` ist der **Raumeinfluss** (Standard 1.0, dimensionslos): bei 1.0 ändert jedes Kelvin Raumabweichung die Vorlauftemperatur um 1 K. Die Entität Raumeinfluss existiert nur, wenn ein Raumsensor konfiguriert ist.
 
 Das Ergebnis wird zwischen minimaler und maximaler Vorlauftemperatur begrenzt.
 
@@ -308,6 +318,7 @@ Die Integration erstellt folgende Entitäten:
 - `number.[name]_min_vorlauftemperatur` - Min. Vorlauftemperatur
 - `number.[name]_max_vorlauftemperatur` - Max. Vorlauftemperatur
 - `number.[name]_hysterese` - Hysterese
+- `number.[name]_raumeinfluss` - Raumeinfluss (nur mit Raumsensor)
 
 #### Select-Entität
 - `select.[name]_berechnungsmodus` - Berechnungsmodus
@@ -319,6 +330,7 @@ Der Vorlauftemperatur-Sensor bietet zusätzliche Attribute:
 ```yaml
 outdoor_temperature: 5.2
 room_temperature_actual: 21.3  # falls Raumsensor konfiguriert
+room_influence: 1.0  # falls Raumsensor konfiguriert
 curve_slope: 1.4
 curve_level: 0.0
 room_temperature_target: 20.0
