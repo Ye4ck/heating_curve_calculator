@@ -12,6 +12,7 @@ CONF_MIN_FLOW_TEMP = "min_flow_temp"
 CONF_MAX_FLOW_TEMP = "max_flow_temp"
 CONF_CALCULATION_MODE = "calculation_mode"
 CONF_HYSTERESIS = "hysteresis"
+CONF_ROOM_INFLUENCE = "room_influence"
 
 # Calculation modes
 MODE_CLASSIC = "classic"
@@ -27,6 +28,6 @@ DEFAULT_MIN_FLOW_TEMP = 20.0
 DEFAULT_MAX_FLOW_TEMP = 75.0
 DEFAULT_CALCULATION_MODE = MODE_CLASSIC
 DEFAULT_HYSTERESIS = 1.0
+DEFAULT_ROOM_INFLUENCE = 1.0
 
-# Keep in sync with manifest.json "version" - shown as device sw_version
-SW_VERSION = "1.4.0"
+SW_VERSION = "1.5.0"
