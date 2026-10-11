@@ -19,7 +19,7 @@
       "sensor_required": "Bitte wählen Sie einen Außentemperatur-Sensor aus."
     },
     "abort": {
-      "already_configured": "Diese Integration wurde bereits mit diesem Sensor konfiguriert."
+      "already_configured": "Ein Eintrag mit diesem Namen und diesen Sensoren existiert bereits."
     }
   },
   "options": {
