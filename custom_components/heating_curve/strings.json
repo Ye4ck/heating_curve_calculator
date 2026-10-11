@@ -17,7 +17,7 @@
       "sensor_required": "Outdoor sensor is required"
     },
     "abort": {
-      "already_configured": "Integration already configured for this sensor"
+      "already_configured": "An entry with this name and these sensors already exists"
     }
   },
   "options": {
