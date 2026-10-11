@@ -135,9 +135,8 @@ class HeatingCurveCard extends HTMLElement {
     this._content = true;
   }
 
-  _calcFlow(outdoor, target, slope, level, minFlow, maxFlow, refTemp) {
-    const diff = refTemp - outdoor;
-    let flow = target + slope * diff + level;
+  _calcFlow(outdoor, target, slope, level, minFlow, maxFlow, roomDeviation) {
+    let flow = target + slope * (target - outdoor) + level + roomDeviation;
     flow = Math.max(minFlow, Math.min(maxFlow, flow));
     return flow;
   }
@@ -164,8 +163,11 @@ class HeatingCurveCard extends HTMLElement {
         : null;
     const flowNow = hcFromDisplayAbs(flowNowRaw, displayUnit);
 
-    const refTemp =
-      mode === "with_room_temp" && roomActual != null ? Number(roomActual) : target;
+    const influence = Number(attrs.room_influence ?? 1.0);
+    const roomDeviation =
+      mode === "with_room_temp" && roomActual != null
+        ? influence * (target - Number(roomActual))
+        : 0;
 
     const minX = this._config.min_outdoor;
     const maxX = this._config.max_outdoor;
@@ -186,7 +188,7 @@ class HeatingCurveCard extends HTMLElement {
     let d = "";
     for (let i = 0; i <= steps; i++) {
       const outdoor = minX + ((maxX - minX) * i) / steps;
-      const flow = this._calcFlow(outdoor, target, slope, level, minFlow, maxFlow, refTemp);
+      const flow = this._calcFlow(outdoor, target, slope, level, minFlow, maxFlow, roomDeviation);
       const px = xToPx(outdoor);
       const py = yToPx(flow);
       d += i === 0 ? `M ${px} ${py}` : ` L ${px} ${py}`;
@@ -235,7 +237,8 @@ class HeatingCurveCard extends HTMLElement {
       const flowNowDisplay = hcToDisplayAbs(flowNow, displayUnit);
       svg += `<rect x="${cx - 5}" y="${bandTop}" width="10" height="${bandBottom - bandTop}" fill="${pointColor}" opacity="0.15" />`;
       svg += `<circle cx="${cx}" cy="${cy}" r="5" fill="${pointColor}" stroke="var(--card-background-color, white)" stroke-width="1.5" />`;
-      svg += `<text x="${cx}" y="${cy - 10}" font-size="10" fill="${pointColor}" text-anchor="middle" font-weight="600">${flowNowDisplay.toFixed(1)}${displayUnit}</text>`;
+      const labelY = cy - 10 < padT + 8 ? cy + 18 : cy - 10;
+      svg += `<text x="${cx}" y="${labelY}" font-size="10" fill="${pointColor}" text-anchor="middle" font-weight="600">${flowNowDisplay.toFixed(1)}${displayUnit}</text>`;
     }
 
     svg += `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + h}" stroke="${axisColor}" stroke-width="1" />`;
