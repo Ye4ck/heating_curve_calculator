@@ -58,6 +58,9 @@
       "max_flow_temp": {
         "name": "Max. Flow Temperature"
       },
+      "room_influence": {
+        "name": "Room Influence"
+      },
       "hysteresis": {
         "name": "Hysteresis"
       }
